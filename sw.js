@@ -1,4 +1,4 @@
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 const SHELL = 'wisdom-shell-' + VERSION;
 const IMAGES = 'wisdom-images';
 const FONTS = 'wisdom-fonts';
