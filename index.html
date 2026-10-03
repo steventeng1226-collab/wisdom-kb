@@ -101,9 +101,12 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .copy{flex:none;min-height:40px;padding:0 12px;border-radius:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font-size:15px;font-weight:500}
 .rel{display:flex;justify-content:space-between;align-items:center;min-height:48px;text-decoration:none;font-size:17px;font-weight:500}
 .review{display:flex;justify-content:center;padding:22px 16px 6px}
-.img-wrap{position:relative;margin:12px 0 0}
-.img-wrap img{width:100%;display:block}
-.view-btn{position:fixed;right:16px;bottom:calc(92px + var(--safe-b));z-index:6;height:50px;padding:0 18px;border-radius:25px;border:none;background:var(--ink);color:#fff;font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+.img-fit{margin:10px 12px 0;height:60vh;display:flex;align-items:flex-start;justify-content:center;padding:0;border:none;background:transparent;width:calc(100% - 24px)}
+.img-fit img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+.img-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 16px 0;min-height:48px;font-size:15px;color:var(--ink2)}
+.done-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:60px;border-top:1px solid #EEE9DF;font-size:16px}
+.done-row .name{flex:1;min-width:0}
+.done-row .acts{flex:none;display:flex;gap:8px}
 /* reflections */
 .form{margin:14px 16px 0;background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 .field label{display:block;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:4px}
@@ -178,7 +181,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -473,17 +476,16 @@ function renderCard(r) {
     <div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button>
       <h1 class="card-title">${esc(c.title)}</h1>
       <button class="icon-btn" data-act="star" aria-label="${u.is_important ? '取消重要' : '標記為重要'}" aria-pressed="${u.is_important}">${ICON.star(u.is_important)}</button></div>
-    <div class="card-one">${esc(c.one_liner)}</div>
+    ${tab === 'image' ? '' : `<div class="card-one">${esc(c.one_liner)}</div>
     <button class="add-ref" data-act="addref">＋ 記錄一次實際體會</button>
-    <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>
+    <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>`}
     <div class="tabs" role="tablist">${tabBtn('image','圖卡')}${tabBtn('digest','精華')}${tabBtn('reflect','體會')}</div>
   </div>${body}`;
 }
 function renderImageTab(c) {
   if (!c.image_url) return `<div class="empty">這張卡還沒有原圖。上傳後會壓縮存到 Cloudinary，看過一次之後離線也能看。<button class="btn solid" data-act="upload">上傳原圖</button></div>`;
-  return `<div class="img-wrap"><img id="cardImg" src="${esc(c.image_url)}" alt="${esc(c.title)} 原圖"></div>
-    <div class="wrap" style="margin-top:12px"><button class="btn" data-act="upload">更換原圖</button></div>
-    <button class="view-btn" data-act="viewer">${ICON.expand}查看圖片</button>`;
+  return `<button class="img-fit" id="imgFit" data-act="viewer" aria-label="放大查看原圖"><img id="cardImg" src="${esc(c.image_url)}" alt="${esc(c.title)} 原圖"></button>
+    <div class="img-foot"><span>點圖可放大</span><button class="copy" data-act="upload">更換原圖</button></div>`;
 }
 function renderDigestTab(c, u, r) {
   const hitId = r.q.get('q') ? r.q.get('sec') : null;
@@ -528,7 +530,15 @@ function renderReflectTab(c, u, open) {
     : (open ? '' : `<div class="empty">還沒有體會。下次在工作或生活中用到這張卡，記一筆：哪次用到、怎麼用、結果如何。</div>`);
   return form + tl;
 }
+function fitImage() {
+  const box = $('#imgFit'); if (!box) return;
+  const top = box.getBoundingClientRect().top + window.scrollY;
+  const player = $('#player').offsetHeight || 72;
+  box.style.height = Math.max(240, window.innerHeight - top - player - 76) + 'px';
+}
+window.addEventListener('resize', fitImage);
 function afterCardRender(y) {
+  fitImage();
   const sec = route.q.get('sec');
   if (y !== null) { window.scrollTo(0, y); return; }
   window.scrollTo(0, 0);
@@ -667,8 +677,8 @@ function renderImport() {
       ${p.items.length ? `<div class="btn-row"><button class="btn solid" data-act="doimport">確認匯入</button><button class="btn" data-act="cancelimport">取消</button></div>` : ''}</div>`;
   }
   const done = importState.done.length ? `<div class="panel"><h3>已匯入，接著上傳原圖</h3>${hasCloud ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
-      ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="prev" style="justify-content:space-between"><div><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
-        <div class="btn-row"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換原圖' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
+      ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="done-row"><div class="name"><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
+        <div class="acts"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
   return `<h1 class="page-title">匯入知識卡</h1><div class="page-sub">貼上 Claude 產出的卡片資料，或選擇 .json 檔。完整備份請到「設定」還原。</div>
     <div class="panel"><textarea id="jsonIn" placeholder="在這裡貼上卡片 JSON" aria-label="卡片 JSON"></textarea>
       <div class="btn-row"><button class="btn solid" data-act="checkjson">檢查資料</button><button class="btn" data-act="pickjson">選擇檔案</button></div></div>${prev}${done}`;
