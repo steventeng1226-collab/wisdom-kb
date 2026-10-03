@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E4D45">
+<title>做人知識庫</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF8F3; --surface:#FFFFFF; --ink:#1B1B1B; --ink2:#333333; --muted:#4A4A4A;
+  --line:#D9D3C7; --line2:#B9B1A2; --accent:#0E4D45; --accent-dark:#08332E;
+  --hit:#FFF8E6; --hit-line:#B7791F; --hit-ink:#5C3D00; --star:#C98A12; --danger:#9B1C1C;
+  --serif:'Noto Serif TC','Songti TC',serif; --sans:'Noto Sans TC','PingFang TC',sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;padding-top:env(safe-area-inset-top,0px)}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--hit-line);outline-offset:2px}
+.view{padding-bottom:calc(96px + var(--safe-b))}
+.wrap{padding:0 16px}
+h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
+.page-title{font-size:26px;padding:18px 16px 4px}
+.page-sub{font-size:16px;color:var(--ink2);padding:0 16px 12px}
+.sec-title{font-family:var(--serif);font-size:20px;margin:22px 16px 10px}
+.btn{min-height:48px;padding:0 20px;border-radius:24px;border:2px solid var(--accent);background:var(--surface);color:var(--accent);font-weight:700;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.solid{background:var(--accent);color:#fff}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn:disabled{opacity:.45}
+.icon-btn{width:44px;height:44px;border:none;background:transparent;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:22px;flex:none}
+.pill{display:inline-block;background:var(--accent);color:#fff;font-size:15px;font-weight:500;padding:3px 12px;border-radius:999px}
+.pill.out{background:transparent;color:var(--accent);border:1.5px solid var(--accent);padding:2px 11px}
+.empty{margin:24px 16px;padding:22px 18px;border:1.5px dashed var(--line2);border-radius:14px;font-size:17px;color:var(--ink2);display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.toast{position:fixed;left:50%;bottom:calc(110px + var(--safe-b));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:22px;font-size:16px;z-index:60;max-width:90vw;text-align:center}
+/* home */
+.today-card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 16px 12px}
+.today-card .one{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.45;color:var(--accent)}
+.today-card .ttl{font-size:17px;font-weight:500;margin-top:6px}
+.today-card .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;font-size:15px;color:var(--ink2)}
+.today-card .kind{font-size:14px;color:var(--muted);margin-bottom:4px}
+.row-link{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;padding:8px 16px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.row-link .t{font-weight:500}
+.row-link .s{font-size:15px;color:var(--ink2)}
+/* library */
+.search{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px}
+.search-box{display:flex;align-items:center;background:var(--surface);border:2px solid var(--line2);border-radius:26px;padding:0 6px 0 16px}
+.search-box:focus-within{border-color:var(--accent)}
+.search-box input{flex:1;border:none;background:transparent;height:50px;font-size:18px;outline:none;min-width:0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px;white-space:nowrap}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.result{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.thumb{width:68px;height:68px;border-radius:10px;object-fit:cover;object-position:top;background:#EDE8DE;flex:none;border:1px solid var(--line)}
+.thumb.ph{display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;color:var(--accent)}
+.result .t{font-weight:700;font-size:17px;line-height:1.4}
+.result .o{font-size:16px;color:var(--ink2);margin-top:2px}
+.result .d{font-size:14px;color:var(--muted);margin-top:4px}
+.hitline{margin-top:6px;font-size:15px;background:var(--hit);border:1px solid var(--hit-line);border-radius:8px;padding:6px 10px;color:var(--hit-ink)}
+mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
+/* card */
+.card-head{padding:8px 12px 0;display:flex;flex-direction:column;gap:6px}
+.card-top{display:flex;align-items:center;gap:4px}
+.card-title{flex:1;font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.35}
+.card-one{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--accent);line-height:1.45;padding:0 4px}
+.add-ref{align-self:flex-start;min-height:44px;border:none;background:transparent;padding:0 4px;font-size:16px;color:var(--accent);font-weight:500}
+.card-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 4px;font-size:15px;color:var(--ink2)}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1.5px solid var(--line);margin-top:6px}
+.tabs button{height:50px;border:none;background:transparent;font-size:18px;color:var(--ink2);font-weight:500;border-bottom:3px solid transparent}
+.tabs button.on{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
+.banner{margin:14px 16px 0;background:#FFF1C9;border:1.5px solid var(--hit-line);border-radius:10px;padding:10px 14px;font-size:16px;color:var(--hit-ink)}
+.core{margin:14px 16px 0;font-size:17px;line-height:1.65}
+.core b{color:var(--accent)}
+.jump{position:sticky;top:0;z-index:4;background:var(--bg);padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;border-bottom:1px solid #E6E0D4}
+.jump button{height:44px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px;font-weight:500;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jump button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.sections{padding:14px 16px 0;display:flex;flex-direction:column;gap:14px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:130px}
+.sec.hit{background:var(--hit);border:2.5px solid var(--hit-line)}
+.sec.playing{box-shadow:0 0 0 3px var(--accent) inset}
+.sec-h{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.sec-h h3{font-size:20px;line-height:1.4;padding-top:6px}
+.play-sm{width:44px;height:44px;border-radius:22px;border:1.5px solid var(--accent);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+.sec .desc{font-size:18px;line-height:1.7}
+.sec .scen{font-size:16px}
+.sec .scen b{color:var(--accent)}
+.sec .src{font-size:14px;color:var(--muted)}
+.ext{align-self:flex-start;min-height:44px;display:inline-flex;align-items:center;font-weight:700;text-decoration:none}
+.box{margin:14px 16px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.box h4{margin:0 0 4px;font-size:15px;color:var(--accent)}
+.prompt{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:48px;border-top:1px solid #EEE9DF;font-size:17px}
+.prompt:first-of-type{border-top:none}
+.copy{flex:none;min-height:40px;padding:0 12px;border-radius:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font-size:15px;font-weight:500}
+.rel{display:flex;justify-content:space-between;align-items:center;min-height:48px;text-decoration:none;font-size:17px;font-weight:500}
+.review{display:flex;justify-content:center;padding:22px 16px 6px}
+.img-wrap{position:relative;margin:12px 0 0}
+.img-wrap img{width:100%;display:block}
+.view-btn{position:fixed;right:16px;bottom:calc(92px + var(--safe-b));z-index:6;height:50px;padding:0 18px;border-radius:25px;border:none;background:var(--ink);color:#fff;font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+/* reflections */
+.form{margin:14px 16px 0;background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.field label{display:block;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.field input,.field textarea{width:100%;border:1.5px solid var(--line2);border-radius:10px;padding:10px 12px;background:#fff;font-size:17px}
+.field textarea{min-height:84px;resize:vertical;line-height:1.6}
+.err{color:var(--danger);font-size:15px}
+.timeline{margin:16px 16px 0;border-left:3px solid var(--accent);padding-left:16px;display:flex;flex-direction:column;gap:18px}
+.tl-item .when{font-weight:700;font-size:17px}
+.tl-item .when span{color:var(--accent)}
+.tl-item p{margin:4px 0 0;font-size:17px}
+.tl-item .lbl{font-size:14px;color:var(--muted);margin-top:6px}
+.tl-del{border:none;background:transparent;color:var(--danger);font-size:15px;min-height:40px;padding:0}
+/* player */
+#player{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--accent);color:#fff;display:none;align-items:center;gap:8px;padding:10px 10px calc(10px + var(--safe-b))}
+#player.show{display:flex}
+#player .lbl{flex:1;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#player .pos{flex:none;font-size:16px}
+#player .rate{flex:none;height:44px;min-width:52px;border:1.5px solid #fff;border-radius:8px;background:transparent;color:#fff;font-size:16px}
+.pbtn{width:50px;height:50px;border-radius:25px;border:none;background:#fff;display:flex;align-items:center;justify-content:center;padding:0;flex:none}
+.menu{position:fixed;right:10px;bottom:calc(80px + var(--safe-b));z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;min-width:200px;overflow:hidden}
+.menu button{min-height:52px;border:none;background:transparent;text-align:left;padding:0 18px;font-size:17px;border-bottom:1px solid #EEE9DF}
+.menu button:last-child{border-bottom:none}
+/* tabbar */
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:var(--safe-b)}
+#tabbar.hide{display:none}
+#tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:64px;text-decoration:none;color:var(--ink2);font-size:14px;font-weight:500}
+#tabbar a.on{color:var(--accent);font-weight:700}
+/* viewer */
+#viewer{position:fixed;inset:0;z-index:50;background:#111;display:none;touch-action:none;overflow:hidden}
+#viewer.show{display:block}
+#viewer img{position:absolute;left:0;top:0;width:100vw;transform-origin:0 0;user-select:none;-webkit-user-drag:none}
+#viewer .vclose{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;width:52px;height:52px;border-radius:26px;border:none;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;z-index:2}
+#viewer .vhint{position:absolute;left:0;right:0;bottom:calc(16px + var(--safe-b));text-align:center;color:#fff;font-size:15px;opacity:.85;pointer-events:none}
+/* import & settings */
+.panel{margin:12px 16px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel h3{font-size:19px}
+.panel p{margin:0;font-size:16px;color:var(--ink2)}
+.panel textarea{width:100%;min-height:160px;border:1.5px solid var(--line2);border-radius:10px;padding:10px 12px;font-family:ui-monospace,monospace;font-size:14px}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px}
+.prev{display:flex;align-items:center;gap:10px;min-height:52px;border-top:1px solid #EEE9DF;font-size:16px}
+.prev input{width:22px;height:22px}
+.prev .st{font-size:14px;color:var(--muted)}
+.prev .warn{color:var(--hit-ink);font-weight:500}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:16px}
+.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.sec{transition:box-shadow .2s}}
+</style>
+</head>
+<body>
+<main id="view" class="view" aria-live="polite"></main>
+
+<nav id="tabbar" aria-label="主選單">
+  <a href="#/home" data-tab="home"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>首頁</a>
+  <a href="#/library" data-tab="library"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg>知識庫</a>
+  <a href="#/import" data-tab="import"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>匯入</a>
+  <a href="#/settings" data-tab="settings"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/></svg>設定</a>
+</nav>
+
+<div id="player" role="region" aria-label="朗讀播放">
+  <button class="pbtn" id="pPlay" aria-label="播放"></button>
+  <div class="lbl" id="pLbl"></div>
+  <div class="pos" id="pPos"></div>
+  <button class="rate" id="pRate" aria-label="語速">1×</button>
+  <button class="icon-btn" id="pMore" aria-label="更多播放選項"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+</div>
+
+<div id="viewer" aria-modal="true" role="dialog" aria-label="查看圖片">
+  <img id="vImg" alt="">
+  <button class="vclose" id="vClose" aria-label="關閉圖片"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B1B1B" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="vhint">雙指縮放・拖曳移動・點兩下還原</div>
+</div>
+
+<script>
+'use strict';
+const APP_VERSION = '1.0.0';
+const SCHEMA_VERSION = '1.0';
+const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀'];
+const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
+const COOLDOWN_DAYS = 3;
+const RATES = [0.8, 1, 1.25, 1.5];
+
+/* ---------- utils ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+function today() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const [y,m,d] = dateStr.slice(0,10).split('-').map(Number);
+  const a = new Date(y, m-1, d), t = new Date(); t.setHours(0,0,0,0);
+  return Math.round((t - a) / 86400000);
+}
+function toast(msg) {
+  const old = $('.toast'); if (old) old.remove();
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2400);
+}
+const ICON = {
+  back: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B1B1B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  star: on => `<svg width="28" height="28" viewBox="0 0 24 24" fill="${on ? '#C98A12' : 'none'}" stroke="${on ? '#8A5A00' : '#333'}" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>`,
+  play: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="${c}"><path d="M7 4.5v15l12.5-7.5z"/></svg>`,
+  pause: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="${c}"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`,
+  check: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
+  expand: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  clear: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+
+/* ---------- IndexedDB ---------- */
+let db;
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('wisdom-kb', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('cards', { keyPath: 'id' });
+      d.createObjectStore('user', { keyPath: 'card_id' });
+      d.createObjectStore('meta', { keyPath: 'key' });
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function idb(store, mode, fn) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, mode);
+    const out = fn(t);
+    t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  });
+}
+const getAll = s => idb(s, 'readonly', t => t.objectStore(s).getAll());
+const put = (s, v) => idb(s, 'readwrite', t => { t.objectStore(s).put(v); });
+async function getMeta(key) { const r = await idb('meta', 'readonly', t => t.objectStore('meta').get(key)); return r ? r.value : null; }
+const setMeta = (key, value) => put('meta', { key, value });
+
+/* in-memory mirror */
+const CARDS = new Map(); const USER = new Map();
+async function loadAll() {
+  CARDS.clear(); USER.clear();
+  (await getAll('cards')).forEach(c => CARDS.set(c.id, c));
+  (await getAll('user')).forEach(u => USER.set(u.card_id, u));
+}
+function newUser(id) {
+  return { card_id: id, is_important: false, created_at: new Date().toISOString(), last_reviewed_at: null, review_count: 0, last_home_shown_at: null, home_shown_count: 0, reflections: [] };
+}
+function userOf(id) { if (!USER.has(id)) USER.set(id, newUser(id)); return USER.get(id); }
+async function saveUser(u) { USER.set(u.card_id, u); await put('user', u); }
+async function saveCard(c) { CARDS.set(c.id, c); await put('cards', c); }
+
+/* ---------- Cloudinary ---------- */
+function thumbUrl(url) { return url && url.includes('/upload/') ? url.replace('/upload/', '/upload/c_fill,g_north,w_200,h_200,q_auto,f_auto/') : url; }
+function compressImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 2400; let w = img.naturalWidth, h = img.naturalHeight;
+      const s = Math.min(1, MAX / Math.max(w, h)); w = Math.round(w * s); h = Math.round(h * s);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(u);
+      cv.toBlob(b => b ? res(b) : rej(new Error('圖片轉檔失敗')), 'image/webp', 0.92);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('無法讀取這張圖片')); };
+    img.src = u;
+  });
+}
+async function uploadImage(cardId, file) {
+  const name = localStorage.getItem('cloudinary_name'), preset = localStorage.getItem('cloudinary_preset');
+  if (!name || !preset) { toast('請先到「設定」填寫 Cloudinary'); location.hash = '#/settings'; return false; }
+  toast('壓縮並上傳中…');
+  try {
+    const blob = await compressImage(file);
+    const fd = new FormData(); fd.append('file', blob, cardId + '.webp'); fd.append('upload_preset', preset); fd.append('folder', 'wisdom-kb');
+    const r = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(name)}/image/upload`, { method: 'POST', body: fd });
+    const j = await r.json();
+    if (!r.ok || !j.secure_url) throw new Error(j.error && j.error.message ? j.error.message : '上傳失敗');
+    const c = CARDS.get(cardId); c.image_url = j.secure_url; await saveCard(c);
+    toast('原圖已上傳'); return true;
+  } catch (e) { toast('上傳失敗：' + e.message); return false; }
+}
+function pickImageFor(cardId, after) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.className = 'hidden-file';
+  inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (f && await uploadImage(cardId, f)) after && after(); };
+  document.body.appendChild(inp); inp.click();
+}
+
+/* ---------- search ---------- */
+function cardFields(c) { return [c.title, c.one_liner, c.core, c.category, ...(c.tags||[]), ...(c.scenarios||[]), ...(c.sources||[])].join('\n'); }
+function secFields(s) { return [s.rule, s.desc, s.chip, ...(s.keywords||[]), ...(s.scenarios||[])].join('\n'); }
+function containsAny(token, words) { return (words||[]).filter(w => w && w.length >= 2 && token.includes(w)); }
+function search(q) {
+  const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return null;
+  const out = [];
+  for (const c of CARDS.values()) {
+    const cf = cardFields(c); let ok = true, score = 0; const terms = new Set(); const secScore = new Map();
+    for (const tk of tokens) {
+      let hit = false;
+      if (cf.includes(tk)) { hit = true; score += 2; terms.add(tk); }
+      const cw = containsAny(tk, [...(c.tags||[]), ...(c.scenarios||[])]);
+      if (cw.length) { hit = true; score += cw.length; cw.forEach(w => terms.add(w)); }
+      for (const s of c.sections || []) {
+        let sh = 0;
+        if (secFields(s).includes(tk)) { sh += 2; terms.add(tk); }
+        const kw = containsAny(tk, [...(s.keywords||[]), ...(s.scenarios||[])]);
+        if (kw.length) { sh += kw.length; kw.forEach(w => terms.add(w)); }
+        if (sh) { hit = true; score += sh; secScore.set(s.id, (secScore.get(s.id)||0) + sh); }
+      }
+      if (!hit) { ok = false; break; }
+    }
+    if (!ok) continue;
+    let best = null, bs = 0;
+    for (const s of c.sections || []) { const v = secScore.get(s.id) || 0; if (v > bs) { bs = v; best = s; } }
+    out.push({ card: c, score, sec: best, terms: [...terms].sort((a,b)=>b.length-a.length) });
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
+function highlight(text, terms) {
+  let h = esc(text);
+  for (const t of terms) { const et = esc(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); h = h.replace(new RegExp(et, 'g'), m => `<mark>${m}</mark>`); }
+  return h.replace(/<mark><mark>(.*?)<\/mark><\/mark>/g, '<mark>$1</mark>');
+}
+function snippet(text, terms) {
+  let pos = -1;
+  for (const t of terms) { const i = text.indexOf(t); if (i >= 0 && (pos < 0 || i < pos)) pos = i; }
+  if (pos < 0) return text.length > 44 ? text.slice(0, 44) + '…' : text;
+  const a = Math.max(0, pos - 16), b = Math.min(text.length, pos + 30);
+  return (a > 0 ? '…' : '') + text.slice(a, b) + (b < text.length ? '…' : '');
+}
+
+/* ---------- home selection ---------- */
+async function todayPicks() {
+  const t = today();
+  const saved = await getMeta('home_today');
+  if (saved && saved.date === t && saved.ids.every(id => CARDS.has(id))) return saved.ids;
+  const all = [...CARDS.keys()];
+  const cool = id => { const d = daysSince(userOf(id).last_reviewed_at); return d !== null && d < COOLDOWN_DAYS; };
+  const reviewOrder = (a, b) => {
+    const ua = userOf(a), ub = userOf(b);
+    if (ua.is_important !== ub.is_important) return ua.is_important ? -1 : 1;
+    const da = ua.last_reviewed_at || '', dbb = ub.last_reviewed_at || '';
+    if (da !== dbb) return da < dbb ? -1 : 1;
+    return ua.review_count - ub.review_count;
+  };
+  const exploreOrder = (a, b) => {
+    const ua = userOf(a), ub = userOf(b);
+    if (ua.is_important !== ub.is_important) return ua.is_important ? 1 : -1;
+    if (ua.home_shown_count !== ub.home_shown_count) return ua.home_shown_count - ub.home_shown_count;
+    const da = ua.last_home_shown_at || '', dbb = ub.last_home_shown_at || '';
+    return da < dbb ? -1 : da > dbb ? 1 : 0;
+  };
+  const eligible = all.filter(id => !cool(id));
+  const picks = eligible.slice().sort(reviewOrder).slice(0, 2);
+  const ex = eligible.filter(id => !picks.includes(id)).sort(exploreOrder)[0];
+  if (ex) picks.push(ex);
+  if (picks.length < 3) all.filter(id => !picks.includes(id)).sort(reviewOrder).slice(0, 3 - picks.length).forEach(id => picks.push(id));
+  for (const id of picks) { const u = userOf(id); u.last_home_shown_at = t; u.home_shown_count += 1; await saveUser(u); }
+  await setMeta('home_today', { date: t, ids: picks });
+  return picks;
+}
+
+/* ---------- router ---------- */
+function parseHash() {
+  const h = location.hash.replace(/^#\/?/, '') || 'home';
+  const [path, qs] = h.split('?');
+  const parts = path.split('/');
+  return { name: parts[0], id: parts[1] ? decodeURIComponent(parts[1]) : null, q: new URLSearchParams(qs || '') };
+}
+let route = null; let libState = { q: '', cat: '', scen: '', star: false };
+async function render(keepScroll) {
+  const prev = route; route = parseHash();
+  const leavingCard = prev && prev.name === 'card' && (route.name !== 'card' || route.id !== prev.id);
+  if (leavingCard) ttsStop();
+  closeMenu();
+  const y = window.scrollY;
+  const v = $('#view');
+  if (route.name === 'card') v.innerHTML = renderCard(route);
+  else if (route.name === 'library') v.innerHTML = renderLibrary();
+  else if (route.name === 'import') v.innerHTML = renderImport();
+  else if (route.name === 'settings') v.innerHTML = await renderSettings();
+  else { route.name = 'home'; v.innerHTML = await renderHome(); }
+  document.querySelectorAll('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === route.name));
+  $('#tabbar').classList.toggle('hide', route.name === 'card');
+  $('#player').classList.toggle('show', route.name === 'card' && !!CARDS.get(route.id));
+  if (route.name === 'card') { setupCardPlayer(); afterCardRender(keepScroll ? y : null); }
+  else if (!keepScroll) window.scrollTo(0, 0);
+  else window.scrollTo(0, y);
+  if (route.name === 'library') bindLibrary();
+}
+window.addEventListener('hashchange', () => render(false));
+function go(h) { if (location.hash === h) render(true); else location.hash = h; }
+
+/* ---------- views: home ---------- */
+async function renderHome() {
+  const d = new Date();
+  const head = `<h1 class="page-title">做人知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${CARDS.size} 張卡</div>`;
+  if (!CARDS.size) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，到「匯入」貼上即可。<a class="btn solid" href="#/import">前往匯入</a></div>`;
+  const ids = await todayPicks();
+  const item = (id, kind) => {
+    const c = CARDS.get(id), u = userOf(id);
+    return `<a class="today-card" href="#/card/${encodeURIComponent(id)}">
+      <div class="kind">${kind}${u.is_important ? '・★ 重要' : ''}</div>
+      <div class="one">${esc(c.one_liner)}</div>
+      <div class="ttl">${esc(c.title)}</div>
+      <div class="meta"><span class="pill">${esc(c.category)}</span><span>${esc((c.scenarios||[]).slice(0,3).join('｜'))}</span></div></a>`;
+  };
+  const kinds = ids.map((id, i) => i < 2 ? '複習' : '探索');
+  const recent = [...CARDS.values()].sort((a, b) => (userOf(b.id).created_at || '').localeCompare(userOf(a.id).created_at || '')).slice(0, 5);
+  return head + `<h2 class="sec-title">今日重讀</h2>${ids.map((id, i) => item(id, kinds[i])).join('')}
+    <div class="wrap" style="margin-top:4px"><button class="btn" data-act="random">隨機抽一張</button></div>
+    <h2 class="sec-title">最近新增</h2>
+    ${recent.map(c => `<a class="row-link" href="#/card/${encodeURIComponent(c.id)}"><div><div class="t">${esc(c.title)}</div><div class="s">${esc(c.one_liner)}</div></div></a>`).join('')}`;
+}
+
+/* ---------- views: library ---------- */
+function reviewedText(id) { const d = daysSince(userOf(id).last_reviewed_at); return d === null ? '尚未複習' : d === 0 ? '今天複習' : `${d} 天前複習`; }
+function libraryResults() {
+  const res = search(libState.q);
+  let list = res ? res : [...CARDS.values()].sort((a,b)=>a.title.localeCompare(b.title,'zh-Hant')).map(c => ({ card: c, sec: null, terms: [] }));
+  if (libState.cat) list = list.filter(r => r.card.category === libState.cat);
+  if (libState.star) list = list.filter(r => userOf(r.card.id).is_important);
+  if (libState.scen) list = list.filter(r => (r.card.scenarios||[]).includes(libState.scen) || (r.card.sections||[]).some(s => (s.scenarios||[]).includes(libState.scen)));
+  if (!list.length) return `<div class="empty">${res ? `找不到「${esc(libState.q)}」。試試較短的字，或用空白分開多個詞。` : '這個篩選條件下沒有卡片。'}</div>`;
+  return list.map(r => {
+    const c = r.card;
+    const qp = new URLSearchParams(); if (r.sec) qp.set('sec', r.sec.id); if (libState.q) qp.set('q', libState.q.trim()); if (r.sec || libState.q) qp.set('tab', 'digest');
+    const th = c.image_url ? `<img class="thumb" src="${esc(thumbUrl(c.image_url))}" alt="" loading="lazy">` : `<div class="thumb ph">${esc((c.title.match(/[\p{L}\p{N}]/u) || [''])[0])}</div>`;
+    const hit = r.sec ? `<div class="hitline">命中：${esc(r.sec.chip.split(' ')[0])} ${highlight(r.sec.rule, r.terms)}<br>${highlight(snippet(r.sec.desc, r.terms), r.terms)}</div>` : '';
+    return `<a class="result" href="#/card/${encodeURIComponent(c.id)}${qp.toString() ? '?' + qp : ''}">${th}<div style="min-width:0;flex:1">
+      <div class="t">${userOf(c.id).is_important ? '★ ' : ''}${r.terms.length ? highlight(c.title, r.terms) : esc(c.title)}</div>
+      <div class="o">${r.terms.length ? highlight(c.one_liner, r.terms) : esc(c.one_liner)}</div>${hit}
+      <div class="d">${esc(c.category)}・${reviewedText(c.id)}</div></div></a>`;
+  }).join('');
+}
+function renderLibrary() {
+  const scens = [...new Set([...CARDS.values()].flatMap(c => [...(c.scenarios||[]), ...(c.sections||[]).flatMap(s => s.scenarios||[])]))];
+  const chip = (act, val, label, on) => `<button class="chip${on ? ' on' : ''}" data-act="${act}" data-val="${esc(val)}">${esc(label)}</button>`;
+  return `<div class="search"><div class="search-box"><input id="q" type="search" enterkeyhint="search" placeholder="搜尋：遇到的狀況、關鍵字…" value="${esc(libState.q)}" aria-label="搜尋知識卡"><button class="icon-btn" data-act="clearq" aria-label="清空搜尋" ${libState.q ? '' : 'style="visibility:hidden"'}>${ICON.clear}</button></div></div>
+    <div class="chips" aria-label="分類">${chip('cat','', '全部分類', !libState.cat)}${CATEGORIES.map(c => chip('cat', c, c, libState.cat === c)).join('')}${chip('star','', '★ 重要', libState.star)}</div>
+    ${scens.length ? `<div class="chips" aria-label="情境">${chip('scen','', '全部情境', !libState.scen)}${scens.map(s => chip('scen', s, s, libState.scen === s)).join('')}</div>` : ''}
+    <div id="results">${libraryResults()}</div>`;
+}
+function bindLibrary() {
+  const q = $('#q'); let timer;
+  q.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { libState.q = q.value; $('#results').innerHTML = libraryResults(); $('[data-act="clearq"]').style.visibility = q.value ? 'visible' : 'hidden'; }, 150);
+  });
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') q.blur(); });
+  $('#results').addEventListener('touchstart', () => q.blur(), { passive: true });
+}
+
+/* ---------- views: card ---------- */
+function natureText(n) { return (Array.isArray(n) ? n : [n]).filter(Boolean).join('＋'); }
+function renderCard(r) {
+  const c = CARDS.get(r.id);
+  if (!c) return `<div class="empty">找不到這張卡，可能已被還原的備份取代。<a class="btn" href="#/library">回知識庫</a></div>`;
+  const u = userOf(c.id);
+  const tab = r.q.get('tab') || (c.image_url ? 'image' : 'digest');
+  const tabBtn = (k, label) => `<button class="${tab === k ? 'on' : ''}" data-act="tab" data-val="${k}" aria-pressed="${tab === k}">${label}</button>`;
+  let body = '';
+  if (tab === 'image') body = renderImageTab(c);
+  else if (tab === 'reflect') body = renderReflectTab(c, u, r.q.get('form') === '1');
+  else body = renderDigestTab(c, u, r);
+  return `<div class="card-head">
+    <div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button>
+      <h1 class="card-title">${esc(c.title)}</h1>
+      <button class="icon-btn" data-act="star" aria-label="${u.is_important ? '取消重要' : '標記為重要'}" aria-pressed="${u.is_important}">${ICON.star(u.is_important)}</button></div>
+    <div class="card-one">${esc(c.one_liner)}</div>
+    <button class="add-ref" data-act="addref">＋ 記錄一次實際體會</button>
+    <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>
+    <div class="tabs" role="tablist">${tabBtn('image','圖卡')}${tabBtn('digest','精華')}${tabBtn('reflect','體會')}</div>
+  </div>${body}`;
+}
+function renderImageTab(c) {
+  if (!c.image_url) return `<div class="empty">這張卡還沒有原圖。上傳後會壓縮存到 Cloudinary，看過一次之後離線也能看。<button class="btn solid" data-act="upload">上傳原圖</button></div>`;
+  return `<div class="img-wrap"><img id="cardImg" src="${esc(c.image_url)}" alt="${esc(c.title)} 原圖"></div>
+    <div class="wrap" style="margin-top:12px"><button class="btn" data-act="upload">更換原圖</button></div>
+    <button class="view-btn" data-act="viewer">${ICON.expand}查看圖片</button>`;
+}
+function renderDigestTab(c, u, r) {
+  const hitId = r.q.get('q') ? r.q.get('sec') : null;
+  const banner = r.q.get('q') ? `<div class="banner">搜尋「${esc(r.q.get('q'))}」${hitId ? '→ 命中 ' + esc((((c.sections||[]).find(s => s.id === hitId) || {}).chip || '').split(' ')[0]) + ' ' + esc(((c.sections||[]).find(s => s.id === hitId) || {}).rule || '') : ''}</div>` : '';
+  const secs = (c.sections || []).map((s, i) => {
+    const ext = s.extended_card_id && CARDS.has(s.extended_card_id) ? `<a class="ext" href="#/card/${encodeURIComponent(s.extended_card_id)}">前往延伸卡片：${esc(CARDS.get(s.extended_card_id).title)}</a>` : '';
+    const src = (s.sources && s.sources.length ? s.sources : c.sources || []).join('、');
+    return `<section class="sec${s.id === hitId ? ' hit' : ''}" id="sec-${esc(s.id)}" data-idx="${i}">
+      <div class="sec-h"><h3>${esc(s.chip.split(' ')[0])} ${esc(s.rule)}</h3><button class="play-sm" data-act="playsec" data-idx="${i}" aria-label="朗讀這一段">${ICON.play('#0E4D45')}</button></div>
+      <div class="desc">${esc(s.desc)}</div>
+      ${(s.scenarios||[]).length ? `<div class="scen"><b>適用　</b>${esc(s.scenarios.join('｜'))}</div>` : ''}
+      <div class="src">${esc(src)}${src ? '・' : ''}${esc(natureText(s.nature))}</div>${ext}</section>`;
+  }).join('');
+  const prompts = (c.prompts || []).length ? `<div class="box"><h4>實用提問句</h4>${c.prompts.map((p, i) => `<div class="prompt"><span>${esc(p)}</span><button class="copy" data-act="copy" data-idx="${i}">複製</button></div>`).join('')}</div>` : '';
+  const rels = (c.related_card_ids || []).filter(id => CARDS.has(id));
+  const related = rels.length ? `<div class="box"><h4>關聯卡片</h4>${rels.map(id => `<a class="rel" href="#/card/${encodeURIComponent(id)}">${esc(CARDS.get(id).title)}<span aria-hidden="true">›</span></a>`).join('')}</div>` : '';
+  return `${banner}${c.core ? `<div class="core"><b>核心　</b>${esc(c.core)}</div>` : ''}
+    <div class="jump" style="margin-top:12px">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
+    <div class="sections">${secs}</div>${prompts}${related}
+    <div class="review">${reviewBtn(u)}</div>`;
+}
+function reviewBtn(u) {
+  return u.last_reviewed_at === today()
+    ? `<button class="btn solid" data-act="review" aria-pressed="true">${ICON.check('#fff')}已複習　今天・累積 ${u.review_count} 次</button>`
+    : `<button class="btn" data-act="review">${ICON.check('#0E4D45')}今天已複習</button>`;
+}
+function renderReflectTab(c, u, open) {
+  const items = (u.reflections || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const form = open ? `<div class="form" id="refForm">
+      <div class="field"><label for="rDate">日期</label><input id="rDate" type="date" value="${today()}"></div>
+      <div class="field"><label for="rOcc">哪次用到</label><input id="rOcc" placeholder="例：主管晉升討論"></div>
+      <div class="field"><label for="rHow">怎麼用</label><textarea id="rHow" placeholder="例：觀察候選人過去提拔過哪些人"></textarea></div>
+      <div class="field"><label for="rRes">結果／體會</label><textarea id="rRes"></textarea></div>
+      <div class="err" id="rErr" hidden>請至少填寫「哪次用到」。</div>
+      <div class="btn-row"><button class="btn solid" data-act="saveref">儲存體會</button><button class="btn" data-act="cancelref">取消</button></div></div>`
+    : `<div class="wrap" style="margin-top:14px"><button class="btn solid" data-act="addref">＋ 新增體會</button></div>`;
+  const tl = items.length ? `<div class="timeline">${items.map(it => `<div class="tl-item">
+      <div class="when">${esc(it.date.replaceAll('-','/'))}｜<span>${esc(it.occasion)}</span></div>
+      ${it.how_applied ? `<div class="lbl">怎麼用</div><p>${esc(it.how_applied)}</p>` : ''}
+      ${it.result ? `<div class="lbl">結果／體會</div><p>${esc(it.result)}</p>` : ''}
+      <button class="tl-del" data-act="delref" data-id="${esc(it.id)}">刪除這筆</button></div>`).join('')}</div>`
+    : (open ? '' : `<div class="empty">還沒有體會。下次在工作或生活中用到這張卡，記一筆：哪次用到、怎麼用、結果如何。</div>`);
+  return form + tl;
+}
+function afterCardRender(y) {
+  const sec = route.q.get('sec');
+  if (y !== null) { window.scrollTo(0, y); return; }
+  window.scrollTo(0, 0);
+  if (sec && (route.q.get('tab') || 'digest') === 'digest') { const el = document.getElementById('sec-' + sec); if (el) setTimeout(() => el.scrollIntoView({ block: 'start' }), 60); }
+  if (route.q.get('form') === '1') { const f = $('#rOcc'); if (f) setTimeout(() => f.focus(), 80); }
+}
+function cardHash(id, params) { const q = new URLSearchParams(params); return `#/card/${encodeURIComponent(id)}${q.toString() ? '?' + q : ''}`; }
+
+/* ---------- TTS player ---------- */
+const tts = { cardId: null, idx: 0, mode: 'all', playing: false, rate: 1, lock: null, timer: null };
+function secsOf() { const c = CARDS.get(tts.cardId); return c ? c.sections || [] : []; }
+function setupCardPlayer() {
+  const c = CARDS.get(route.id); if (!c) return;
+  if (tts.cardId !== c.id) {
+    tts.cardId = c.id; tts.playing = false;
+    const sec = route.q.get('sec'); const i = (c.sections||[]).findIndex(s => s.id === sec);
+    tts.idx = i >= 0 ? i : 0;
+  }
+  tts.rate = Number(localStorage.getItem('tts_rate')) || 1;
+  updatePlayer();
+}
+function updatePlayer() {
+  const secs = secsOf(); const s = secs[tts.idx];
+  $('#pPlay').innerHTML = tts.playing ? ICON.pause('#0E4D45') : ICON.play('#0E4D45');
+  $('#pPlay').setAttribute('aria-label', tts.playing ? '暫停' : '播放');
+  $('#pLbl').textContent = s ? `${s.chip.split(' ')[0]} ${s.rule}` : '';
+  $('#pPos').textContent = secs.length ? `${tts.idx + 1} / ${secs.length}` : '';
+  $('#pRate').textContent = (tts.rate === 1 ? '1' : tts.rate) + '×';
+  document.querySelectorAll('.sec.playing').forEach(e => e.classList.remove('playing'));
+  if (tts.playing && s) { const el = document.getElementById('sec-' + s.id); if (el) el.classList.add('playing'); }
+}
+function zhVoice() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+}
+async function wakeOn() { try { if ('wakeLock' in navigator && !tts.lock) { tts.lock = await navigator.wakeLock.request('screen'); tts.lock.addEventListener('release', () => { tts.lock = null; }); } } catch (e) {} }
+function wakeOff() { if (tts.lock) { tts.lock.release().catch(() => {}); tts.lock = null; } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && tts.playing) wakeOn(); });
+function speakIdx(i) {
+  const secs = secsOf(); if (!secs[i]) { ttsStop(); return; }
+  if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援朗讀'); return; }
+  tts.idx = i; tts.playing = true; updatePlayer(); wakeOn();
+  speechSynthesis.cancel(); clearTimeout(tts.timer);
+  const s = secs[i];
+  const u = new SpeechSynthesisUtterance(s.audio_script || `${s.rule}。${s.desc}`);
+  u.lang = 'zh-TW'; u.rate = tts.rate; const v = zhVoice(); if (v) u.voice = v;
+  const token = Symbol(); tts.token = token;
+  u.onend = () => {
+    if (tts.token !== token || !tts.playing) return;
+    if (tts.mode === 'all' && i < secs.length - 1) tts.timer = setTimeout(() => speakIdx(i + 1), 350);
+    else { tts.playing = false; wakeOff(); updatePlayer(); }
+  };
+  u.onerror = () => { if (tts.token === token) { tts.playing = false; wakeOff(); updatePlayer(); } };
+  setTimeout(() => { if (tts.token === token) speechSynthesis.speak(u); }, 60);
+}
+function ttsStop() { tts.playing = false; tts.token = null; clearTimeout(tts.timer); if ('speechSynthesis' in window) speechSynthesis.cancel(); wakeOff(); if ($('#pPlay')) updatePlayer(); }
+$('#pPlay').addEventListener('click', () => { if (tts.playing) ttsStop(); else { tts.mode = 'all'; speakIdx(tts.idx); } });
+$('#pRate').addEventListener('click', () => {
+  tts.rate = RATES[(RATES.indexOf(tts.rate) + 1) % RATES.length]; localStorage.setItem('tts_rate', tts.rate); updatePlayer();
+  if (tts.playing) speakIdx(tts.idx);
+});
+$('#pMore').addEventListener('click', e => {
+  e.stopPropagation(); if ($('.menu')) { closeMenu(); return; }
+  const m = document.createElement('div'); m.className = 'menu';
+  m.innerHTML = `<button data-m="all">播放全部（從頭）</button><button data-m="from">從目前段落開始</button><button data-m="prev">上一段</button><button data-m="next">下一段</button><button data-m="stop">停止</button>`;
+  m.addEventListener('click', ev => {
+    const k = ev.target.dataset.m; closeMenu(); const n = secsOf().length;
+    if (k === 'all') { tts.mode = 'all'; speakIdx(0); }
+    else if (k === 'from') { tts.mode = 'all'; speakIdx(tts.idx); }
+    else if (k === 'prev') { const i = Math.max(0, tts.idx - 1); if (tts.playing) speakIdx(i); else { tts.idx = i; updatePlayer(); } }
+    else if (k === 'next') { const i = Math.min(n - 1, tts.idx + 1); if (tts.playing) speakIdx(i); else { tts.idx = i; updatePlayer(); } }
+    else ttsStop();
+  });
+  document.body.appendChild(m);
+});
+function closeMenu() { const m = $('.menu'); if (m) m.remove(); }
+document.addEventListener('click', e => { if (!e.target.closest('.menu') && !e.target.closest('#pMore')) closeMenu(); });
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+
+/* ---------- image viewer ---------- */
+const vw = { s: 1, x: 0, y: 0, pts: new Map(), start: null, lastTap: 0 };
+function vApply() { $('#vImg').style.transform = `translate(${vw.x}px,${vw.y}px) scale(${vw.s})`; }
+function vReset() { vw.s = 1; vw.x = 0; vw.y = 0; vApply(); }
+function openViewer(src) {
+  const img = $('#vImg'); img.src = src; vReset(); $('#viewer').classList.add('show');
+  history.pushState({ viewer: 1 }, ''); document.body.style.overflow = 'hidden';
+}
+function closeViewer(fromPop) { if (!$('#viewer').classList.contains('show')) return; $('#viewer').classList.remove('show'); document.body.style.overflow = ''; if (!fromPop) history.back(); }
+window.addEventListener('popstate', () => closeViewer(true));
+$('#vClose').addEventListener('click', () => closeViewer(false));
+(() => {
+  const el = $('#viewer');
+  const clamp = () => {
+    const img = $('#vImg'); const w = window.innerWidth * vw.s, h = img.naturalHeight * (window.innerWidth / (img.naturalWidth || 1)) * vw.s;
+    const H = window.innerHeight;
+    const W = window.innerWidth;
+    vw.x = w <= W ? Math.min(Math.max(vw.x, 0), W - w) : Math.min(0, Math.max(W - w, vw.x));
+    vw.y = h <= H ? Math.min(Math.max(vw.y, 0), H - h) : Math.min(0, Math.max(H - h, vw.y));
+  };
+  el.addEventListener('pointerdown', e => {
+    if (e.target.closest('.vclose')) return;
+    el.setPointerCapture(e.pointerId); vw.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (vw.pts.size === 1) {
+      const now = Date.now(); if (now - vw.lastTap < 300) { vReset(); vw.lastTap = 0; return; } vw.lastTap = now;
+    }
+    vw.start = { s: vw.s, x: vw.x, y: vw.y, pts: new Map([...vw.pts].map(([k, v]) => [k, { ...v }])) };
+  });
+  el.addEventListener('pointermove', e => {
+    if (!vw.pts.has(e.pointerId) || !vw.start) return;
+    vw.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const now = [...vw.pts.values()], st = [...vw.start.pts.values()];
+    if (now.length >= 2 && st.length >= 2) {
+      const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+      const s = Math.min(6, Math.max(1, vw.start.s * d(now[0], now[1]) / (d(st[0], st[1]) || 1)));
+      const mx0 = (st[0].x + st[1].x) / 2, my0 = (st[0].y + st[1].y) / 2, mx = (now[0].x + now[1].x) / 2, my = (now[0].y + now[1].y) / 2;
+      const k = s / vw.start.s; vw.s = s; vw.x = mx - (mx0 - vw.start.x) * k; vw.y = my - (my0 - vw.start.y) * k;
+    } else if (now.length === 1 && st.length >= 1) {
+      vw.x = vw.start.x + (now[0].x - st[0].x); vw.y = vw.start.y + (now[0].y - st[0].y);
+    }
+    clamp(); vApply();
+  });
+  const up = e => { vw.pts.delete(e.pointerId); vw.start = vw.pts.size ? { s: vw.s, x: vw.x, y: vw.y, pts: new Map([...vw.pts].map(([k, v]) => [k, { ...v }])) } : null; };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+})();
+
+/* ---------- import ---------- */
+let importState = { preview: null, done: [] };
+function renderImport() {
+  const hasCloud = localStorage.getItem('cloudinary_name') && localStorage.getItem('cloudinary_preset');
+  let prev = '';
+  if (importState.preview) {
+    const p = importState.preview;
+    prev = `<div class="panel"><h3>檢查結果</h3>${p.errors.length ? `<div class="err">${p.errors.map(esc).join('<br>')}</div>` : ''}
+      ${p.items.map((it, i) => `<label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><div><b>${esc(it.card.title)}</b>　${it.card.sections.length} 段</div>
+        <div class="st ${it.older ? 'warn' : ''}">${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${it.card.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${it.card.content_version}），★、複習與體會保留`}</div></div></label>`).join('')}
+      ${p.items.length ? `<div class="btn-row"><button class="btn solid" data-act="doimport">確認匯入</button><button class="btn" data-act="cancelimport">取消</button></div>` : ''}</div>`;
+  }
+  const done = importState.done.length ? `<div class="panel"><h3>已匯入，接著上傳原圖</h3>${hasCloud ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
+      ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="prev" style="justify-content:space-between"><div><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
+        <div class="btn-row"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換原圖' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
+  return `<h1 class="page-title">匯入知識卡</h1><div class="page-sub">貼上 Claude 產出的卡片資料，或選擇 .json 檔。完整備份請到「設定」還原。</div>
+    <div class="panel"><textarea id="jsonIn" placeholder="在這裡貼上卡片 JSON" aria-label="卡片 JSON"></textarea>
+      <div class="btn-row"><button class="btn solid" data-act="checkjson">檢查資料</button><button class="btn" data-act="pickjson">選擇檔案</button></div></div>${prev}${done}`;
+}
+function normalizeCard(raw, errors) {
+  const where = raw && raw.title ? `「${raw.title}」` : `卡片 ${raw && raw.id ? raw.id : ''}`;
+  const bad = m => { errors.push(where + '：' + m); return null; };
+  if (!raw || typeof raw !== 'object') return bad('格式不是卡片物件');
+  if (!raw.id || typeof raw.id !== 'string') return bad('缺少 id');
+  if (!raw.title) return bad('缺少 title');
+  if (!raw.one_liner) return bad('缺少 one_liner');
+  if (!CATEGORIES.includes(raw.category)) return bad(`分類「${raw.category || ''}」不在 6 大分類內`);
+  const arr = v => Array.isArray(v) ? v.filter(x => x !== null && x !== '') : (v ? [v] : []);
+  const nat = arr(raw.nature); const badNat = nat.filter(n => !NATURES.includes(n));
+  if (!nat.length) return bad('缺少內容性質 nature');
+  if (badNat.length) return bad(`內容性質「${badNat.join('、')}」不是合法值`);
+  if (!Array.isArray(raw.sections) || !raw.sections.length) return bad('缺少段落 sections');
+  const sections = [];
+  for (const [i, s] of raw.sections.entries()) {
+    if (!s.id || !s.rule || !s.desc) return bad(`第 ${i + 1} 段缺少 id、rule 或 desc`);
+    const sn = arr(s.nature); const sb = sn.filter(n => !NATURES.includes(n));
+    if (sb.length) return bad(`第 ${i + 1} 段內容性質「${sb.join('、')}」不是合法值`);
+    sections.push({ id: s.id, chip: s.chip || `${i + 1} ${s.rule.slice(0, 2)}`, rule: s.rule, desc: s.desc, keywords: arr(s.keywords), scenarios: arr(s.scenarios), nature: sn.length ? sn : nat, sources: arr(s.sources), audio_script: s.audio_script || '', extended_card_id: s.extended_card_id || null });
+  }
+  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '' };
+}
+function checkJson(text) {
+  const errors = []; let data;
+  try { data = JSON.parse(text); } catch (e) { importState.preview = { errors: ['不是有效的 JSON：' + e.message], items: [] }; return; }
+  if (data && data.schema_version) { importState.preview = { errors: ['這是 APP 匯出的完整備份檔。請到「設定」的「備份與還原」使用還原。'], items: [] }; return; }
+  const list = Array.isArray(data) ? data : (data && Array.isArray(data.cards) ? data.cards : [data]);
+  const items = [];
+  for (const raw of list) {
+    const c = normalizeCard(raw, errors); if (!c) continue;
+    const cur = CARDS.get(c.id);
+    const curVer = cur ? cur.content_version || 1 : 0;
+    const older = !!cur && c.content_version < curVer;
+    items.push({ card: c, isNew: !cur, older, curVer, checked: !older });
+  }
+  importState.preview = { errors, items };
+}
+async function doImport() {
+  const p = importState.preview; if (!p) return;
+  document.querySelectorAll('[data-pi]').forEach(cb => { p.items[cb.dataset.pi].checked = cb.checked; });
+  const ids = [];
+  for (const it of p.items) {
+    if (!it.checked) continue;
+    const cur = CARDS.get(it.card.id);
+    const card = { ...it.card }; if (!card.image_url && cur && cur.image_url) card.image_url = cur.image_url;
+    await saveCard(card);
+    if (!USER.has(card.id)) await saveUser(newUser(card.id));
+    ids.push(card.id);
+  }
+  importState = { preview: null, done: ids };
+  toast(`已匯入 ${ids.length} 張卡`);
+  render(false);
+}
+
+/* ---------- settings ---------- */
+async function renderSettings() {
+  const last = await getMeta('last_backup_at'); const d = last ? daysSince(last) : null;
+  let persisted = null; try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; } catch (e) {}
+  return `<h1 class="page-title">設定</h1>
+    <div class="panel"><h3>Cloudinary（存放原圖）</h3><p>使用 Unsigned Upload Preset。請在 Cloudinary 後台限制格式、檔案大小與資料夾。</p>
+      <div class="field"><label for="cName">Cloud name</label><input id="cName" value="${esc(localStorage.getItem('cloudinary_name') || '')}" autocomplete="off"></div>
+      <div class="field"><label for="cPreset">Upload preset</label><input id="cPreset" value="${esc(localStorage.getItem('cloudinary_preset') || '')}" autocomplete="off"></div>
+      <div class="btn-row"><button class="btn solid" data-act="savecloud">儲存設定</button></div></div>
+    <div class="panel"><h3>備份與還原</h3>
+      <div class="kv"><span>上次備份</span><b>${d === null ? '尚未備份' : d === 0 ? '今天' : d + ' 天前'}</b></div>
+      <p>備份檔包含所有卡片、★、複習紀錄與體會。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
+      <div class="btn-row"><button class="btn solid" data-act="backup">匯出完整備份</button><button class="btn danger" data-act="restore">從備份還原</button></div></div>
+    <div class="panel"><h3>關於</h3>
+      <div class="kv"><span>卡片數</span><b>${CARDS.size} 張</b></div>
+      <div class="kv"><span>永久儲存</span><b>${persisted === null ? '無法確認' : persisted ? '已啟用' : '未啟用'}</b></div>
+      <div class="kv"><span>版本</span><b>v${APP_VERSION}</b></div></div>`;
+}
+async function doBackup() {
+  const cards = [...CARDS.values()].map(c => ({ ...c, user: userOf(c.id) }));
+  const data = { schema_version: SCHEMA_VERSION, exported_at: new Date().toISOString(), app_version: APP_VERSION, cards };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wisdom-kb-backup-${today().replaceAll('-', '')}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  await setMeta('last_backup_at', today()); toast('已匯出完整備份'); render(true);
+}
+function doRestore() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json'; inp.className = 'hidden-file';
+  inp.onchange = async () => {
+    const f = inp.files[0]; inp.remove(); if (!f) return;
+    let data; try { data = JSON.parse(await f.text()); } catch (e) { toast('檔案不是有效的 JSON'); return; }
+    if (!data.schema_version || !Array.isArray(data.cards)) { toast('這不是 APP 匯出的備份檔；卡片資料請用「匯入」'); return; }
+    if (data.schema_version !== SCHEMA_VERSION) { toast(`備份格式 ${data.schema_version} 與目前 ${SCHEMA_VERSION} 不符，未還原`); return; }
+    if (!confirm(`還原會用備份內容取代目前所有卡片與紀錄（備份共 ${data.cards.length} 張）。確定還原？`)) return;
+    await idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('user').clear();
+      for (const c of data.cards) { const { user, ...card } = c; t.objectStore('cards').put(card); t.objectStore('user').put({ ...newUser(card.id), ...(user || {}), card_id: card.id }); } });
+    await setMeta('home_today', null);
+    await loadAll(); toast(`已還原 ${data.cards.length} 張卡`); render(false);
+  };
+  document.body.appendChild(inp); inp.click();
+}
+
+/* ---------- actions ---------- */
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act;
+  const c = route && route.name === 'card' ? CARDS.get(route.id) : null;
+  const params = () => Object.fromEntries(route.q.entries());
+  switch (act) {
+    case 'random': { const ids = [...CARDS.keys()]; if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
+    case 'clearq': libState.q = ''; $('#q').value = ''; $('#results').innerHTML = libraryResults(); el.style.visibility = 'hidden'; $('#q').focus(); break;
+    case 'cat': libState.cat = el.dataset.val; render(true); break;
+    case 'star': if (c) { const u = userOf(c.id); u.is_important = !u.is_important; await saveUser(u); render(true); } else { libState.star = !libState.star; render(true); } break;
+    case 'scen': libState.scen = el.dataset.val; render(true); break;
+    case 'back': if (history.length > 1) history.back(); else go('#/home'); break;
+    case 'tab': { const p = params(); p.tab = el.dataset.val; delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
+    case 'addref': { const p = params(); p.tab = 'reflect'; p.form = '1'; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
+    case 'cancelref': { const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
+    case 'saveref': {
+      const occ = $('#rOcc').value.trim();
+      if (!occ) { $('#rErr').hidden = false; $('#rOcc').focus(); return; }
+      const u = userOf(c.id);
+      u.reflections = [...(u.reflections || []), { id: 'r' + Date.now(), date: $('#rDate').value || today(), occasion: occ, how_applied: $('#rHow').value.trim(), result: $('#rRes').value.trim() }];
+      await saveUser(u); const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存體會'); render(false); break;
+    }
+    case 'delref': { if (!confirm('刪除這筆體會？')) return; const u = userOf(c.id); u.reflections = u.reflections.filter(r => r.id !== el.dataset.id); await saveUser(u); render(true); break; }
+    case 'review': {
+      const u = userOf(c.id); const t = today();
+      if (u.last_reviewed_at !== t) { u.review_count += 1; u.last_reviewed_at = t; await saveUser(u); }
+      el.outerHTML = reviewBtn(u); break;
+    }
+    case 'jump': { const s = document.getElementById('sec-' + el.dataset.id); if (s) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); const i = Number(s && s.dataset.idx); if (!tts.playing && !isNaN(i)) { tts.idx = i; updatePlayer(); } break; }
+    case 'playsec': { const i = Number(el.dataset.idx); if (tts.playing && tts.idx === i && tts.mode === 'single') ttsStop(); else { tts.mode = 'single'; speakIdx(i); } break; }
+    case 'copy': { const txt = c.prompts[Number(el.dataset.idx)]; try { await navigator.clipboard.writeText(txt); toast('已複製'); } catch (err) { toast('無法複製，請長按文字選取'); } break; }
+    case 'viewer': openViewer(c.image_url); break;
+    case 'upload': pickImageFor(c.id, () => render(true)); break;
+    case 'upimg': pickImageFor(el.dataset.id, () => render(true)); break;
+    case 'checkjson': { const t = $('#jsonIn').value.trim(); if (!t) { toast('請先貼上卡片 JSON'); return; } checkJson(t); render(true); break; }
+    case 'pickjson': {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json'; inp.className = 'hidden-file';
+      inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (!f) return; checkJson(await f.text()); render(true); };
+      document.body.appendChild(inp); inp.click(); break;
+    }
+    case 'doimport': await doImport(); break;
+    case 'cancelimport': importState.preview = null; render(true); break;
+    case 'savecloud': localStorage.setItem('cloudinary_name', $('#cName').value.trim()); localStorage.setItem('cloudinary_preset', $('#cPreset').value.trim()); toast('已儲存設定'); break;
+    case 'backup': await doBackup(); break;
+    case 'restore': doRestore(); break;
+  }
+});
+
+/* ---------- boot ---------- */
+(async () => {
+  db = await openDB();
+  try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+  await loadAll();
+  if (!location.hash) history.replaceState(null, '', '#/home');
+  render(false);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
