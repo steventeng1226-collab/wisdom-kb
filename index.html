@@ -187,7 +187,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -280,17 +280,22 @@ function compressImage(file) {
     img.src = u;
   });
 }
+function hasCloud() { return !!(localStorage.getItem('cloudinary_name') && localStorage.getItem('cloudinary_preset')); }
+async function uploadBlob(cardId, blob) {
+  const name = localStorage.getItem('cloudinary_name'), preset = localStorage.getItem('cloudinary_preset');
+  const fd = new FormData(); fd.append('file', blob, cardId + '.webp'); fd.append('upload_preset', preset); fd.append('folder', 'wisdom-kb');
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(name)}/image/upload`, { method: 'POST', body: fd });
+  const j = await r.json();
+  if (!r.ok || !j.secure_url) throw new Error(j.error && j.error.message ? j.error.message : '上傳失敗');
+  const c = CARDS.get(cardId); c.image_url = j.secure_url; await saveCard(c);
+}
 async function uploadImage(cardId, file) {
   const name = localStorage.getItem('cloudinary_name'), preset = localStorage.getItem('cloudinary_preset');
   if (!name || !preset) { toast('請先到「設定」填寫 Cloudinary'); location.hash = '#/settings'; return false; }
   toast('壓縮並上傳中…');
   try {
     const blob = await compressImage(file);
-    const fd = new FormData(); fd.append('file', blob, cardId + '.webp'); fd.append('upload_preset', preset); fd.append('folder', 'wisdom-kb');
-    const r = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(name)}/image/upload`, { method: 'POST', body: fd });
-    const j = await r.json();
-    if (!r.ok || !j.secure_url) throw new Error(j.error && j.error.message ? j.error.message : '上傳失敗');
-    const c = CARDS.get(cardId); c.image_url = j.secure_url; await saveCard(c);
+    await uploadBlob(cardId, blob);
     toast('原圖已上傳'); return true;
   } catch (e) { toast('上傳失敗：' + e.message); return false; }
 }
@@ -683,11 +688,11 @@ function renderImport() {
   if (importState.preview) {
     const p = importState.preview;
     prev = `<div class="panel"><h3>檢查結果</h3>${p.errors.length ? `<div class="err">${p.errors.map(esc).join('<br>')}</div>` : ''}
-      ${p.items.map((it, i) => `<label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><div><b>${esc(it.card.title)}</b></div><div class="st">${esc(it.card.category)}・${it.card.sections.length} 段</div>
+      ${p.items.map((it, i) => `<label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><div><b>${esc(it.card.title)}</b></div><div class="st">${esc(it.card.category)}・${it.card.sections.length} 段${it.card._image_data ? '・含原圖' : ''}</div>
         <div class="st ${it.older ? 'warn' : ''}">${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${it.card.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${it.card.content_version}），★、複習與體會保留${it.hasImg ? '，保留原圖' : ''}`}</div></div></label>`).join('')}
       ${p.items.length ? `<div class="btn-row"><button class="btn solid" data-act="doimport">確認匯入</button><button class="btn" data-act="cancelimport">取消</button></div>` : ''}</div>`;
   }
-  const done = importState.done.length ? `<div class="panel"><h3>已匯入，接著上傳原圖</h3>${hasCloud ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
+  const done = importState.done.length ? `<div class="panel"><h3>已匯入的卡片</h3>${hasCloud ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
       ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="done-row"><div class="name"><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
         <div class="acts"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
   return `<h1 class="page-title">匯入知識卡</h1><div class="page-sub">貼上 Claude 產出的卡片資料，或選擇 .json 檔。完整備份請到「設定」還原。</div>
@@ -714,10 +719,13 @@ function normalizeCard(raw, errors) {
     if (sb.length) return bad(`第 ${i + 1} 段內容性質「${sb.join('、')}」不是合法值`);
     sections.push({ id: s.id, chip: s.chip || `${i + 1} ${s.rule.slice(0, 2)}`, rule: s.rule, desc: s.desc, keywords: arr(s.keywords), scenarios: arr(s.scenarios), nature: sn.length ? sn : nat, sources: arr(s.sources), audio_script: s.audio_script || '', extended_card_id: s.extended_card_id || null });
   }
-  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '' };
+  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '', _image_data: typeof raw.image_data === 'string' && raw.image_data.startsWith('data:image/') ? raw.image_data : null };
 }
+const IMG_MSG = '這是圖片檔。請先把圖交給 Claude 產出卡片資料，匯入後再上傳原圖。';
+function isImageFile(f) { return /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|heic|heif)$/i.test(f.name); }
 function checkJson(text) {
   const errors = []; let data;
+  if (/^\uFFFD|JFIF|Exif|\u0089PNG|^RIFF/.test(text.slice(0, 40))) { importState.preview = { errors: [IMG_MSG], items: [] }; return; }
   try { data = JSON.parse(text); } catch (e) { importState.preview = { errors: ['不是有效的 JSON：' + e.message], items: [] }; return; }
   if (data && data.schema_version) { importState.preview = { errors: ['這是 APP 匯出的完整備份檔。請到「設定」的「備份與還原」使用還原。'], items: [] }; return; }
   const list = Array.isArray(data) ? data : (data && Array.isArray(data.cards) ? data.cards : [data]);
@@ -734,17 +742,23 @@ function checkJson(text) {
 async function doImport() {
   const p = importState.preview; if (!p) return;
   document.querySelectorAll('[data-pi]').forEach(cb => { p.items[cb.dataset.pi].checked = cb.checked; });
-  const ids = [];
+  const ids = [], withImg = [];
   for (const it of p.items) {
     if (!it.checked) continue;
     const cur = CARDS.get(it.card.id);
-    const card = { ...it.card }; if (!card.image_url && cur && cur.image_url) card.image_url = cur.image_url;
+    const { _image_data, ...card } = it.card; if (!card.image_url && cur && cur.image_url) card.image_url = cur.image_url;
     await saveCard(card);
     if (!USER.has(card.id)) await saveUser(newUser(card.id));
-    ids.push(card.id);
+    ids.push(card.id); if (_image_data) withImg.push([card.id, _image_data]);
   }
   importState = { preview: null, done: ids };
-  toast(`已匯入 ${ids.length} 張卡`);
+  let failed = 0;
+  if (withImg.length && !hasCloud()) failed = withImg.length;
+  else for (const [i, [id, data]] of withImg.entries()) {
+    toast(`上傳原圖 ${i + 1} / ${withImg.length}…`);
+    try { const blob = await (await fetch(data)).blob(); await uploadBlob(id, blob); } catch (e) { failed++; }
+  }
+  toast(failed ? `已匯入 ${ids.length} 張卡；${failed} 張原圖未上傳${hasCloud() ? '，請按「上傳原圖」重試' : '，請先到「設定」填寫 Cloudinary'}` : `已匯入 ${ids.length} 張卡${withImg.length ? '，原圖已上傳' : ''}`);
   render(false);
 }
 
@@ -829,7 +843,7 @@ document.addEventListener('click', async e => {
     case 'checkjson': { const t = $('#jsonIn').value.trim(); if (!t) { toast('請先貼上卡片 JSON'); return; } checkJson(t); render(true); break; }
     case 'pickjson': {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json'; inp.className = 'hidden-file';
-      inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (!f) return; checkJson(await f.text()); render(true); };
+      inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (!f) return; if (isImageFile(f)) importState.preview = { errors: [IMG_MSG], items: [] }; else checkJson(await f.text()); render(true); };
       document.body.appendChild(inp); inp.click(); break;
     }
     case 'doimport': await doImport(); break;
