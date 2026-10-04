@@ -139,8 +139,33 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .menu{position:fixed;right:10px;bottom:calc(80px + var(--safe-b));z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;min-width:200px;overflow:hidden}
 .menu button{min-height:52px;border:none;background:transparent;text-align:left;padding:0 18px;font-size:17px;border-bottom:1px solid #EEE9DF}
 .menu button:last-child{border-bottom:none}
+/* teach */
+.mrow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;min-height:64px}
+.mrow .t{font-weight:700;font-size:17px}
+.mrow .s{font-size:15px;color:var(--ink2);margin-top:2px;line-height:1.5}
+.mnum{flex:none;width:34px;height:34px;border-radius:17px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.mdone{flex:none}
+.hint{font-family:var(--sans);font-size:14px;font-weight:400;color:var(--muted)}
+.flow{padding:0 16px;display:flex;flex-direction:column;align-items:stretch}
+.node{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--ink)}
+.node.static{border-color:var(--line2)}
+.node.playing{background:#E2F0EC;box-shadow:0 0 0 3px var(--accent) inset}
+.node .nn{flex:none;width:30px;height:30px;border-radius:15px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.node .nt{display:flex;flex-direction:column;gap:2px;line-height:1.55}
+.node .nt b{font-size:18px}
+.pr-hint{color:var(--hit-ink);background:var(--hit);border-radius:6px;padding:2px 6px;margin-top:2px}
+.arrow{text-align:center;color:var(--accent);font-size:22px;line-height:1.3;font-weight:700}
+.pr-time{font-family:var(--serif);font-size:52px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums}
+.pr-time.over{color:var(--danger)}
+.pr-rec{display:flex;align-items:center;gap:8px;font-size:16px;min-height:44px}
+.pr-rec input,.ck input{width:22px;height:22px}
+.ck{display:flex;align-items:center;gap:10px;min-height:44px;font-size:17px;color:var(--ink);font-weight:400}
+.ckchip{display:inline-flex;align-items:center;gap:6px}
+.field label.ck{display:flex;margin:0;font-size:17px;font-weight:400;color:var(--ink)}
+.field label.ckchip{display:inline-flex;margin:0;font-size:15px;font-weight:400;color:var(--ink)}
+.ckchip input{width:18px;height:18px}
 /* tabbar */
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:var(--safe-b)}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:var(--safe-b)}
 #tabbar.hide{display:none}
 #tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:64px;text-decoration:none;color:var(--ink2);font-size:14px;font-weight:500}
 #tabbar a.on{color:var(--accent);font-weight:700}
@@ -171,6 +196,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 <nav id="tabbar" aria-label="主選單">
   <a href="#/home" data-tab="home"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>首頁</a>
   <a href="#/library" data-tab="library"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg>知識庫</a>
+  <a href="#/teach" data-tab="teach"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l4-4 4 4M7 8h6M7 11h9"/></svg>教學</a>
   <a href="#/import" data-tab="import"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>匯入</a>
   <a href="#/settings" data-tab="settings"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/></svg>設定</a>
 </nav>
@@ -191,7 +217,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -399,8 +425,9 @@ function parseHash() {
 let route = null; let libState = { q: '', cat: '', scen: '', star: false, scenOpen: false, archive: false };
 async function render(keepScroll) {
   const prev = route; route = parseHash();
-  const leavingCard = prev && prev.name === 'card' && (route.name !== 'card' || route.id !== prev.id);
-  if (leavingCard) ttsStop();
+  const pk = r => r && (r.name === 'card' || r.name === 'method') ? r.name + ':' + r.id : null;
+  if (prev && pk(prev) && pk(prev) !== pk(route)) ttsStop();
+  if (prev && prev.name === 'practice' && (route.name !== 'practice' || route.q.toString() !== prev.q.toString())) practiceCleanup();
   closeMenu();
   const y = window.scrollY;
   const v = $('#view');
@@ -408,11 +435,17 @@ async function render(keepScroll) {
   else if (route.name === 'library') v.innerHTML = renderLibrary();
   else if (route.name === 'import') v.innerHTML = renderImport();
   else if (route.name === 'settings') v.innerHTML = await renderSettings();
+  else if (route.name === 'teach') v.innerHTML = renderTeach();
+  else if (route.name === 'method') v.innerHTML = renderMethod(route.id);
+  else if (route.name === 'practice') v.innerHTML = renderPractice(route.q.get('m'), route.q.get('c'));
   else { route.name = 'home'; v.innerHTML = await renderHome(); }
-  document.querySelectorAll('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === route.name));
-  $('#tabbar').classList.toggle('hide', route.name === 'card');
-  $('#player').classList.toggle('show', route.name === 'card' && !!CARDS.get(route.id));
-  if (route.name === 'card') { setupCardPlayer(); afterCardRender(keepScroll ? y : null); }
+  const tabOf = { method: 'teach', practice: 'teach' }[route.name] || route.name;
+  document.querySelectorAll('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === tabOf));
+  const playerPage = (route.name === 'card' && !!CARDS.get(route.id)) || (route.name === 'method' && !!METHOD_MAP[route.id]);
+  $('#tabbar').classList.toggle('hide', route.name === 'card' || route.name === 'method');
+  $('#player').classList.toggle('show', playerPage);
+  if (route.name === 'method' && METHOD_MAP[route.id]) { setupMethodPlayer(route.id); if (!keepScroll) window.scrollTo(0, 0); else window.scrollTo(0, y); }
+  else if (route.name === 'card') { setupCardPlayer(); afterCardRender(keepScroll ? y : null); }
   else if (!keepScroll) window.scrollTo(0, 0);
   else window.scrollTo(0, y);
   if (route.name === 'library') bindLibrary();
@@ -545,6 +578,7 @@ function renderDigestTab(c, u, r) {
     <div class="jump" style="margin-top:12px">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
     <div class="sections">${secs}</div>${prompts}${related}
     <div class="review">${reviewBtn(u)}</div>
+    <div class="review" style="padding-top:6px"><a class="btn" href="#/practice?c=${encodeURIComponent(c.id)}">用這張卡練習教學</a></div>
     <div class="manage"><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button class="del" data-act="delcard">刪除這張卡</button></div>`;
 }
 function reviewBtn(u) {
@@ -588,27 +622,27 @@ function afterCardRender(y) {
 function cardHash(id, params) { const q = new URLSearchParams(params); return `#/card/${encodeURIComponent(id)}${q.toString() ? '?' + q : ''}`; }
 
 /* ---------- TTS player ---------- */
-const tts = { cardId: null, idx: 0, mode: 'all', playing: false, rate: 1, lock: null, timer: null };
-function secsOf() { const c = CARDS.get(tts.cardId); return c ? c.sections || [] : []; }
+const tts = { key: null, items: [], idx: 0, mode: 'all', playing: false, rate: 1, lock: null, timer: null };
+function secsOf() { return tts.items; }
+function setPlayerItems(key, items, startIdx) {
+  if (tts.key !== key) { tts.key = key; tts.playing = false; tts.idx = startIdx || 0; }
+  tts.items = items; tts.rate = Number(localStorage.getItem('tts_rate')) || 1;
+  updatePlayer();
+}
 function setupCardPlayer() {
   const c = CARDS.get(route.id); if (!c) return;
-  if (tts.cardId !== c.id) {
-    tts.cardId = c.id; tts.playing = false;
-    const sec = route.q.get('sec'); const i = (c.sections||[]).findIndex(s => s.id === sec);
-    tts.idx = i >= 0 ? i : 0;
-  }
-  tts.rate = Number(localStorage.getItem('tts_rate')) || 1;
-  updatePlayer();
+  const sec = route.q.get('sec'); const i = (c.sections||[]).findIndex(s => s.id === sec);
+  setPlayerItems('card:' + c.id, (c.sections||[]).map(s => ({ label: `${s.chip.split(' ')[0]} ${s.rule}`, text: s.audio_script || `${s.rule}。${s.desc}`, el: 'sec-' + s.id })), i >= 0 ? i : 0);
 }
 function updatePlayer() {
   const secs = secsOf(); const s = secs[tts.idx];
   $('#pPlay').innerHTML = tts.playing ? ICON.pause('#0E4D45') : ICON.play('#0E4D45');
   $('#pPlay').setAttribute('aria-label', tts.playing ? '暫停' : '播放');
-  $('#pLbl').textContent = s ? `${s.chip.split(' ')[0]} ${s.rule}` : '';
+  $('#pLbl').textContent = s ? s.label : '';
   $('#pPos').textContent = secs.length ? `${tts.idx + 1} / ${secs.length}` : '';
   $('#pRate').textContent = (tts.rate === 1 ? '1' : tts.rate) + '×';
-  document.querySelectorAll('.sec.playing').forEach(e => e.classList.remove('playing'));
-  if (tts.playing && s) { const el = document.getElementById('sec-' + s.id); if (el) el.classList.add('playing'); }
+  document.querySelectorAll('.playing').forEach(e => e.classList.remove('playing'));
+  if (tts.playing && s) { const el = document.getElementById(s.el); if (el) el.classList.add('playing'); }
 }
 function zhVoice() {
   const vs = speechSynthesis.getVoices();
@@ -623,7 +657,7 @@ function speakIdx(i) {
   tts.idx = i; tts.playing = true; updatePlayer(); wakeOn();
   speechSynthesis.cancel(); clearTimeout(tts.timer);
   const s = secs[i];
-  const u = new SpeechSynthesisUtterance(s.audio_script || `${s.rule}。${s.desc}`);
+  const u = new SpeechSynthesisUtterance(s.text);
   u.lang = 'zh-TW'; u.rate = tts.rate; const v = zhVoice(); if (v) u.voice = v;
   const token = Symbol(); tts.token = token;
   u.onend = () => {
@@ -703,6 +737,187 @@ $('#vClose').addEventListener('click', () => closeViewer(false));
   const up = e => { vw.pts.delete(e.pointerId); vw.start = vw.pts.size ? { s: vw.s, x: vw.x, y: vw.y, pts: new Map([...vw.pts].map(([k, v]) => [k, { ...v }])) } : null; };
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
 })();
+
+/* ---------- teaching ---------- */
+const sec0 = c => (c.sections || [])[0] || { rule: '', desc: '' };
+const secList = c => (c.sections || []).map(s => `${s.chip.split(' ')[0]} ${s.rule}`).join('、');
+const METHODS = [
+  { id: 'prep', name: 'PREP 三分鐘分享', one: '先講結論，再講原因與例子，最後重複結論。練口才的基本功。',
+    cats: 'all', suits: '早會分享、短時間傳達一個觀念。任何一張卡都適用，最適合用來練口才。', source: 'PREP 表達法',
+    steps: [
+      { t: '結論（Point）', d: '開口第一句就講重點，讓聽的人知道你要說什麼', h: c => `「${c.one_liner}」` },
+      { t: '原因（Reason）', d: '說明為什麼，用一到兩個理由就好，不要太多', h: c => c.core || sec0(c).desc },
+      { t: '舉例（Example）', d: '舉一個真實的例子，最好是對方熟悉的工作場景', h: c => `想一個工作中真實的例子，可以從「${sec0(c).rule}」切入` },
+      { t: '再講結論（Point）', d: '用同一句話收尾，加深印象', h: c => `再說一次：「${c.one_liner}」` } ],
+    mistakes: ['先鋪陳背景，拖很久才講重點', '理由講太多，聽的人記不住', '例子太抽象，沒有真實場景'] },
+  { id: 'story', name: '說故事', one: '用情境、衝突、轉折、啟示，讓觀念被記住、打動人心。',
+    cats: ['做人處世', '人生觀', '學習成長', '領導管理'], suits: '激勵人心、做人處世、人生觀類的內容。想讓對方記住、有感覺時使用。', source: '故事四段結構',
+    steps: [
+      { t: '情境', d: '交代時間、地點、人物，讓聽的人進入場景', h: c => '想一個你親身經歷或親眼看過的場景' },
+      { t: '衝突', d: '遇到什麼問題或兩難，故事的張力從這裡來', h: c => '當時遇到什麼難題？大家怎麼想？' },
+      { t: '轉折', d: '做了什麼決定、發生什麼改變', h: c => `用「${c.one_liner}」的觀念，事情怎麼轉變？` },
+      { t: '啟示', d: '把故事帶回卡片的觀念，用一句話收尾', h: c => `「${c.one_liner}」` } ],
+    mistakes: ['故事太長，沒有衝突', '最後忘了講啟示，聽完不知道重點', '加油添醋，失去可信度'] },
+  { id: 'ask', name: '提問引導', one: '不直接給答案，用問題帶對方自己想出來，記得最牢。',
+    cats: ['思考方法', '領導管理', '人際溝通'], suits: '思考方法、領導管理類。想培養部屬自己思考、而不是等你給答案時使用。', source: '引導式提問',
+    steps: [
+      { t: '拋出問題', d: '用一個和對方切身相關的問題開場', h: c => (c.prompts || [])[0] || `「${sec0(c).rule}」你怎麼看？` },
+      { t: '聽對方想法', d: '先不評論，讓他把話說完', h: c => '先聽完，點頭回應，不急著糾正' },
+      { t: '追問', d: '問為什麼、還有呢、如果……會怎樣', h: c => (c.prompts || [])[1] || '為什麼這樣想？還有其他可能嗎？' },
+      { t: '引出觀念', d: '把對方的答案連到卡片的觀念', h: c => c.core || c.one_liner },
+      { t: '確認理解', d: '請對方用自己的話說一次', h: c => '「你用自己的話說說看，學到什麼？」' } ],
+    mistakes: ['問題已經暗示了答案', '等不及，自己把答案講出來', '一次問太多問題'] },
+  { id: 'case', name: '案例討論', one: '拿真實工作事件，用卡片的框架一起分析，學以致用。',
+    cats: ['財經投資', '領導管理', '思考方法'], suits: '財經判斷、領導管理、問題分析類。內容有框架或步驟時最適合。', source: '案例教學法',
+    steps: [
+      { t: '選案例', d: '挑一個真實、大家都知道的工作事件', h: c => '選一個最近發生、大家都有印象的事件' },
+      { t: '描述事實', d: '只講發生什麼，先不下結論', h: c => '時間、經過、結果，不評論對錯' },
+      { t: '套用卡片', d: '用卡片的框架逐點分析', h: c => secList(c) },
+      { t: '討論做法', d: '如果重來一次，會怎麼做', h: c => '「如果重來，你會怎麼做？」' },
+      { t: '歸納原則', d: '用一句話總結學到什麼', h: c => `「${c.one_liner}」` } ],
+    mistakes: ['討論變成批評當事人', '只分析，最後沒有歸納原則', '案例太複雜，偏離主題'] },
+  { id: 'twi', name: '示範與練習（TWI 四步驟）', one: '準備、示範講解、讓他試做、追蹤指導，教操作與流程最有效。',
+    cats: ['學習成長', '領導管理', '思考方法'], suits: '操作、流程、標準作業，以及有明確步驟的方法。新人訓練最常用。', source: 'TWI 工作教導（Job Instruction）',
+    steps: [
+      { t: '準備', d: '讓對方放鬆，說明要學什麼、為什麼重要', h: c => `說明今天要學「${c.title}」，以及為什麼重要` },
+      { t: '示範講解', d: '一次一步，講出重點和原因', h: c => `一次一步：${secList(c)}` },
+      { t: '讓他試做', d: '請他邊做邊說出重點，錯了當場糾正', h: c => '請對方說出每一步的重點，錯了立刻修正' },
+      { t: '追蹤指導', d: '告訴他有問題問誰，之後逐步減少檢查', h: c => '約定什麼時候再檢查一次' } ],
+    mistakes: ['一次教太多步驟', '只示範，沒讓他自己做', '教完就不追蹤'] },
+  { id: 'feynman', name: '白話講解（費曼技巧）', one: '講給完全不懂的人聽，卡住的地方，就是自己還沒懂的地方。',
+    cats: 'all', suits: '任何一張卡都適用。用來檢驗自己是否真正領悟，適合教別人之前先練。', source: '費曼學習法',
+    steps: [
+      { t: '選一個觀念', d: '一次只講一個觀念', h: c => `「${c.one_liner}」` },
+      { t: '用白話講', d: '不用術語，假裝講給國中生聽', h: c => `用最簡單的話說明：${c.core || sec0(c).desc}` },
+      { t: '找出卡住處', d: '講不順、說不清的地方，就是還沒懂的地方', h: c => '記下哪裡講不順' },
+      { t: '重讀再簡化', d: '回到卡片補足，再講一次更簡單的版本', h: c => '回到精華頁補足，再講一次' } ],
+    mistakes: ['不自覺用了術語', '卡住時跳過，不去面對'] },
+  { id: 'guide', name: '一頁圖導讀', one: '拿著資訊圖，先看全貌、再逐區導讀，帶對方看懂一張圖。',
+    cats: 'image', suits: '有原圖的卡。會議分享、讀書會、帶部屬一起看資料時使用。', source: '視覺導讀',
+    steps: [
+      { t: '先看全貌', d: '介紹這張圖在講什麼、分成幾區', h: c => `這張圖講「${c.title}」，共 ${(c.sections || []).length} 區` },
+      { t: '逐區導讀', d: '每區只講一句重點，不照唸文字', h: c => secList(c) },
+      { t: '挑一區深入', d: '選最重要或最相關的一區，舉例說明', h: c => `例如「${sec0(c).rule}」` },
+      { t: '收尾提問', d: '問對方哪一區最有用，確認吸收', h: c => '「哪一區對你最有用？」' } ],
+    mistakes: ['照著圖唸字', '每一區都講一樣久，沒有重點'] }
+];
+const METHOD_MAP = Object.fromEntries(METHODS.map(m => [m.id, m]));
+const TEACH = { learned: {}, logs: [] };
+async function loadTeach() { TEACH.learned = (await getMeta('teach_learned')) || {}; TEACH.logs = (await getMeta('teach_logs')) || []; }
+async function saveTeach() { await setMeta('teach_learned', TEACH.learned); await setMeta('teach_logs', TEACH.logs); }
+function suitableCards(m) {
+  return [...CARDS.values()].filter(c => isActive(c.id) && (m.cats === 'all' || (m.cats === 'image' ? !!c.image_url : m.cats.includes(c.category))));
+}
+function renderTeach() {
+  const n = METHODS.filter(m => TEACH.learned[m.id]).length;
+  const logs = TEACH.logs.slice().sort((a, b) => b.at.localeCompare(a.at)).slice(0, 30);
+  return `<h1 class="page-title">教學</h1><div class="page-sub">學會用不同方式，把知識講給別人聽・已學 ${n}／${METHODS.length}</div>
+    <h2 class="sec-title">教學方法</h2>
+    ${METHODS.map((m, i) => `<a class="mrow" href="#/method/${m.id}"><span class="mnum">${i + 1}</span><div style="flex:1;min-width:0"><div class="t">${esc(m.name)}</div><div class="s">${esc(m.one)}</div></div>${TEACH.learned[m.id] ? `<span class="mdone" aria-label="已學">${ICON.check('#0E4D45')}</span>` : ''}</a>`).join('')}
+    <div class="wrap" style="margin-top:16px"><a class="btn solid" href="#/practice">開始練習</a></div>
+    <h2 class="sec-title">教學紀錄</h2>
+    ${logs.length ? `<div class="timeline">${logs.map(l => { const c = CARDS.get(l.card_id); const m = METHOD_MAP[l.method];
+      return `<div class="tl-item"><div class="when">${esc(l.date.replaceAll('-', '/'))}｜<span>${esc(m ? m.name : l.method)}</span></div>
+        <p>${esc(c ? c.title : '（卡片已刪除）')}・${esc(l.audience)}・${esc(l.overall)}${l.duration ? `・${fmtTime(l.duration)}` : ''}</p>
+        ${l.checks && l.checks.length ? `<div class="lbl">做到：${esc(l.checks.join('、'))}</div>` : ''}
+        ${l.note ? `<div class="lbl">下次改進</div><p>${esc(l.note)}</p>` : ''}
+        <button class="tl-del" data-act="dellog" data-id="${esc(l.id)}">刪除這筆</button></div>`; }).join('')}</div>`
+      : `<div class="empty">還沒有教學紀錄。選一種方法、一張卡，練講一次，就會記在這裡。</div>`}`;
+}
+function renderMethod(id) {
+  const m = METHOD_MAP[id];
+  if (!m) return `<div class="empty">找不到這個教學方法。<a class="btn" href="#/teach">回教學</a></div>`;
+  const cards = suitableCards(m);
+  return `<div class="card-head"><div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button><h1 class="card-title">${esc(m.name)}</h1></div>
+      <div class="card-meta" style="font-size:17px;color:var(--ink)">${esc(m.one)}</div></div>
+    <h2 class="sec-title">流程圖<span class="hint">　點一格可朗讀這一步</span></h2>
+    <div class="flow">${m.steps.map((st, i) => `${i ? '<div class="arrow" aria-hidden="true">↓</div>' : ''}<button class="node" id="node-${i}" data-act="playsec" data-idx="${i}"><span class="nn">${i + 1}</span><span class="nt"><b>${esc(st.t)}</b><span>${esc(st.d)}</span></span></button>`).join('')}</div>
+    <div class="box"><h4>適用內容</h4><p style="margin:0 0 6px">${esc(m.suits)}</p>
+      ${cards.length ? `<div class="lbl" style="font-size:14px;color:var(--muted)">知識庫中適合的卡（點選開始練習）</div>${cards.map(c => `<a class="rel" href="#/practice?m=${m.id}&c=${encodeURIComponent(c.id)}">${esc(c.title)}<span aria-hidden="true">›</span></a>`).join('')}` : '<p class="s">知識庫裡還沒有適合的卡。</p>'}</div>
+    <div class="box"><h4>常見錯誤</h4>${m.mistakes.map(x => `<p style="margin:4px 0">・${esc(x)}</p>`).join('')}</div>
+    <div class="src" style="margin:10px 16px 0;font-size:14px;color:var(--muted)">出處：${esc(m.source)}・個人整理</div>
+    <div class="review" style="gap:10px;flex-wrap:wrap">
+      <button class="btn${TEACH.learned[m.id] ? ' solid' : ''}" data-act="learned">${TEACH.learned[m.id] ? ICON.check('#fff') + '已學' : ICON.check('#0E4D45') + '標記為已學'}</button>
+      <a class="btn" href="#/practice?m=${m.id}">開始練習</a></div>`;
+}
+function setupMethodPlayer(id) {
+  const m = METHOD_MAP[id];
+  setPlayerItems('method:' + id, m.steps.map((st, i) => ({ label: `${i + 1} ${st.t}`, text: `第${i + 1}步，${st.t}。${st.d}。`, el: 'node-' + i })), 0);
+}
+/* practice */
+const PR = { target: 180, start: 0, elapsed: 0, timer: null, running: false, rec: null, stream: null, chunks: [], url: null, withRec: true, done: false };
+function fmtTime(sec) { const a = Math.abs(Math.round(sec)); return `${Math.floor(a / 60)}:${pad(a % 60)}`; }
+function practiceCleanup() {
+  clearInterval(PR.timer); PR.running = false; PR.done = false; PR.elapsed = 0;
+  try { if (PR.rec && PR.rec.state !== 'inactive') PR.rec.stop(); } catch (e) {}
+  if (PR.stream) PR.stream.getTracks().forEach(t => t.stop());
+  if (PR.url) URL.revokeObjectURL(PR.url);
+  PR.rec = null; PR.stream = null; PR.url = null; PR.chunks = []; wakeOff();
+}
+function renderPractice(mid, cid) {
+  const m = METHOD_MAP[mid], c = cid && CARDS.get(cid);
+  const head = (t) => `<div class="card-head"><div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button><h1 class="card-title">${t}</h1></div></div>`;
+  if (!m) {
+    return head('選擇教學方法') + `${c ? `<div class="page-sub" style="padding-top:8px">卡片：${esc(c.title)}</div>` : ''}
+      ${METHODS.map((x, i) => `<a class="mrow" href="#/practice?m=${x.id}${c ? '&c=' + encodeURIComponent(c.id) : ''}"><span class="mnum">${i + 1}</span><div style="flex:1;min-width:0"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.suits)}</div></div></a>`).join('')}`;
+  }
+  if (!c) {
+    const fit = suitableCards(m), others = [...CARDS.values()].filter(x => isActive(x.id) && !fit.includes(x));
+    const row = x => `<a class="row-link" href="#/practice?m=${m.id}&c=${encodeURIComponent(x.id)}"><div><div class="t">${esc(x.title)}</div><div class="s">${esc(x.one_liner)}</div></div></a>`;
+    return head('選擇要教的卡') + `<div class="page-sub" style="padding-top:8px">方法：${esc(m.name)}</div>
+      ${fit.length ? `<h2 class="sec-title">適合這個方法</h2>${fit.map(row).join('')}` : ''}${others.length ? `<h2 class="sec-title">其他卡片</h2>${others.map(row).join('')}` : ''}
+      ${!fit.length && !others.length ? '<div class="empty">知識庫還沒有卡片。</div>' : ''}`;
+  }
+  const over = PR.elapsed > PR.target;
+  const timeTxt = PR.running || PR.done ? (over ? '+' + fmtTime(PR.elapsed - PR.target) : fmtTime(PR.target - PR.elapsed)) : fmtTime(PR.target);
+  return head('練習教學') + `<div class="page-sub" style="padding-top:8px"><b>${esc(m.name)}</b> × <a href="#/card/${encodeURIComponent(c.id)}?tab=digest">${esc(c.title)}</a></div>
+    <div class="flow">${m.steps.map((st, i) => `${i ? '<div class="arrow" aria-hidden="true">↓</div>' : ''}<div class="node static"><span class="nn">${i + 1}</span><span class="nt"><b>${esc(st.t)}</b><span class="pr-hint">${esc(st.h(c))}</span></span></div>`).join('')}</div>
+    <div class="panel" style="align-items:center;text-align:center">
+      <div class="chips" style="padding:0;justify-content:center">${[60, 180, 300].map(t => `<button class="chip${PR.target === t ? ' on' : ''}" data-act="settime" data-val="${t}" ${PR.running ? 'disabled' : ''}>${t / 60} 分鐘</button>`).join('')}</div>
+      <div id="prTime" class="pr-time${over ? ' over' : ''}">${timeTxt}</div>
+      <label class="pr-rec"><input type="checkbox" id="prRec" ${PR.withRec ? 'checked' : ''} ${PR.running ? 'disabled' : ''}> 同時錄音（只供重播，不存檔）</label>
+      ${PR.running ? `<button class="btn solid" data-act="prstop">結束${PR.rec ? '並停止錄音' : ''}</button>` : `<button class="btn solid" data-act="prstart">${PR.done ? '再練一次' : '開始練講'}</button>`}
+      ${PR.url ? `<audio controls src="${PR.url}" style="width:100%;margin-top:6px"></audio>` : ''}
+    </div>
+    ${PR.done ? `<div class="form" id="prForm">
+      <div class="field"><label>自我檢查（做到的打勾）</label>
+        ${['先講了重點', '有舉真實例子', '沒有超時', '講得流暢、少贅字', '對方（或自己）聽得懂'].map(x => `<label class="ck"><input type="checkbox" name="prck" value="${x}"> ${x}</label>`).join('')}</div>
+      <div class="field"><label>整體</label><div class="chips" style="padding:0">${['好', '普通', '要加強'].map((x, i) => `<label class="chip ckchip"><input type="radio" name="prov" value="${x}" ${i === 1 ? 'checked' : ''}> ${x}</label>`).join('')}</div></div>
+      <div class="field"><label>對象</label><div class="chips" style="padding:0">${['自己練習', '部屬', '會議', '其他'].map((x, i) => `<label class="chip ckchip"><input type="radio" name="praud" value="${x}" ${i === 0 ? 'checked' : ''}> ${x}</label>`).join('')}</div></div>
+      <div class="field"><label for="prNote">哪裡講不順？下次怎麼改</label><textarea id="prNote"></textarea></div>
+      <div class="btn-row"><button class="btn solid" data-act="prsave">儲存教學紀錄</button></div></div>` : ''}`;
+}
+function prTick() {
+  PR.elapsed = (Date.now() - PR.start) / 1000;
+  const el = $('#prTime'); if (!el) return;
+  const over = PR.elapsed > PR.target;
+  el.textContent = over ? '+' + fmtTime(PR.elapsed - PR.target) : fmtTime(PR.target - PR.elapsed);
+  el.classList.toggle('over', over);
+  if (over && !PR.buzzed) { PR.buzzed = true; try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} }
+}
+async function prStart() {
+  practiceCleanup();
+  PR.withRec = $('#prRec') ? $('#prRec').checked : PR.withRec;
+  if (PR.withRec) {
+    try {
+      PR.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(PR.stream); PR.rec = rec; PR.chunks = [];
+      rec.ondataavailable = e => { if (e.data.size) PR.chunks.push(e.data); };
+      rec.onstop = () => {
+        if (PR.rec !== rec || route.name !== 'practice') return;
+        const b = new Blob(PR.chunks, { type: rec.mimeType || 'audio/webm' }); PR.url = URL.createObjectURL(b);
+        if (PR.stream) PR.stream.getTracks().forEach(t => t.stop()); PR.stream = null; render(true);
+      };
+      rec.start();
+    } catch (e) { PR.rec = null; toast('無法使用麥克風，這次只計時。可在 Chrome 網站設定中允許麥克風'); }
+  }
+  PR.start = Date.now(); PR.elapsed = 0; PR.running = true; PR.done = false; PR.buzzed = false;
+  PR.timer = setInterval(prTick, 250); wakeOn(); render(true);
+}
+function prStop() {
+  clearInterval(PR.timer); PR.elapsed = (Date.now() - PR.start) / 1000; PR.running = false; PR.done = true; wakeOff();
+  if (PR.rec && PR.rec.state !== 'inactive') PR.rec.stop(); else render(true);
+}
 
 /* ---------- import ---------- */
 let importState = { preview: null, done: [] };
@@ -797,7 +1012,7 @@ async function renderSettings() {
       <div class="btn-row"><button class="btn solid" data-act="savecloud">儲存設定</button></div></div>
     <div class="panel"><h3>備份與還原</h3>
       <div class="kv"><span>上次備份</span><b>${d === null ? '尚未備份' : d === 0 ? '今天' : d + ' 天前'}</b></div>
-      <p>備份檔包含所有卡片、★、複習紀錄與體會。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
+      <p>備份檔包含所有卡片、★、複習紀錄、體會與教學紀錄。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
       <div class="btn-row"><button class="btn solid" data-act="backup">匯出完整備份</button><button class="btn danger" data-act="restore">從備份還原</button></div></div>
     <div class="panel"><h3>關於</h3>
       <div class="kv"><span>卡片數</span><b>${activeIds().length} 張${CARDS.size > activeIds().length ? `（另有封存 ${CARDS.size - activeIds().length} 張）` : ''}</b></div>
@@ -806,7 +1021,7 @@ async function renderSettings() {
 }
 async function doBackup() {
   const cards = [...CARDS.values()].map(c => ({ ...c, user: userOf(c.id) }));
-  const data = { schema_version: SCHEMA_VERSION, exported_at: new Date().toISOString(), app_version: APP_VERSION, cards };
+  const data = { schema_version: SCHEMA_VERSION, exported_at: new Date().toISOString(), app_version: APP_VERSION, cards, teach: { learned: TEACH.learned, logs: TEACH.logs } };
   const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wisdom-kb-backup-${today().replaceAll('-', '')}.json`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -823,6 +1038,7 @@ function doRestore() {
     await idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('user').clear();
       for (const c of data.cards) { const { user, ...card } = c; t.objectStore('cards').put(card); t.objectStore('user').put({ ...newUser(card.id), ...(user || {}), card_id: card.id }); } });
     await setMeta('home_today', null);
+    if (data.teach) { TEACH.learned = data.teach.learned || {}; TEACH.logs = data.teach.logs || []; await saveTeach(); }
     await loadAll(); toast(`已還原 ${data.cards.length} 張卡`); render(false);
   };
   document.body.appendChild(inp); inp.click();
@@ -835,6 +1051,18 @@ document.addEventListener('click', async e => {
   const c = route && route.name === 'card' ? CARDS.get(route.id) : null;
   const params = () => Object.fromEntries(route.q.entries());
   switch (act) {
+    case 'learned': { const id = route.id; if (TEACH.learned[id]) delete TEACH.learned[id]; else TEACH.learned[id] = today(); await saveTeach(); render(true); break; }
+    case 'settime': PR.target = Number(el.dataset.val); render(true); break;
+    case 'prstart': await prStart(); break;
+    case 'prstop': prStop(); break;
+    case 'prsave': {
+      const checks = [...document.querySelectorAll('input[name=prck]:checked')].map(x => x.value);
+      const overall = (document.querySelector('input[name=prov]:checked') || {}).value || '普通';
+      const audience = (document.querySelector('input[name=praud]:checked') || {}).value || '自己練習';
+      TEACH.logs.push({ id: 'l' + Date.now(), at: new Date().toISOString(), date: today(), method: route.q.get('m'), card_id: route.q.get('c'), audience, overall, checks, note: $('#prNote').value.trim(), duration: Math.round(PR.elapsed) });
+      await saveTeach(); practiceCleanup(); toast('已儲存教學紀錄'); go('#/teach'); break;
+    }
+    case 'dellog': { if (!confirm('刪除這筆教學紀錄？')) return; TEACH.logs = TEACH.logs.filter(l => l.id !== el.dataset.id); await saveTeach(); render(true); break; }
     case 'arch': libState.archive = !libState.archive; libState.scen = ''; render(true); break;
     case 'archive': case 'unarchive': {
       const u = userOf(c.id); u.archived = act === 'archive'; await saveUser(u);
@@ -896,7 +1124,7 @@ document.addEventListener('click', async e => {
 (async () => {
   db = await openDB();
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
-  await loadAll();
+  await loadAll(); await loadTeach();
   if (!location.hash) history.replaceState(null, '', '#/home');
   render(false);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
