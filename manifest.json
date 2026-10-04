@@ -1,6 +1,6 @@
 {
-  "name": "做人知識庫",
-  "short_name": "知識庫",
+  "name": "為人處世知識庫",
+  "short_name": "為人處世",
   "start_url": "./index.html#/home",
   "scope": "./",
   "display": "standalone",
