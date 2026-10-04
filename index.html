@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D45">
-<title>做人知識庫</title>
+<title>為人處世知識庫</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,6 +159,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .pr-time.over{color:var(--danger)}
 .pr-rec{display:flex;align-items:center;gap:8px;font-size:16px;min-height:44px}
 .pr-rec input,.ck input{width:22px;height:22px}
+.pr-live{width:100%;text-align:left;background:#F1EEE6;border-radius:10px;padding:10px 12px;font-size:16px;min-height:60px;max-height:160px;overflow-y:auto;color:var(--ink)}
 .ck{display:flex;align-items:center;gap:10px;min-height:44px;font-size:17px;color:var(--ink);font-weight:400}
 .ckchip{display:inline-flex;align-items:center;gap:6px}
 .field label.ck{display:flex;margin:0;font-size:17px;font-weight:400;color:var(--ink)}
@@ -217,7 +218,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -426,7 +427,7 @@ let route = null; let libState = { q: '', cat: '', scen: '', star: false, scenOp
 async function render(keepScroll) {
   const prev = route; route = parseHash();
   const pk = r => r && (r.name === 'card' || r.name === 'method') ? r.name + ':' + r.id : null;
-  if (prev && pk(prev) && pk(prev) !== pk(route)) ttsStop();
+  if (prev && pk(prev) && pk(prev) !== pk(route)) { if (tts.sleepEnd) { clearInterval(tts.sleepTimer); tts.sleepEnd = 0; } tts.playlist = false; tts.key = null; ttsStop(); }
   if (prev && prev.name === 'practice' && (route.name !== 'practice' || route.q.toString() !== prev.q.toString())) practiceCleanup();
   closeMenu();
   const y = window.scrollY;
@@ -456,7 +457,7 @@ function go(h) { if (location.hash === h) render(true); else location.hash = h; 
 /* ---------- views: home ---------- */
 async function renderHome() {
   const d = new Date();
-  const head = `<h1 class="page-title">做人知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
+  const head = `<h1 class="page-title">為人處世知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
   if (!activeIds().length) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，到「匯入」貼上即可。<a class="btn solid" href="#/import">前往匯入</a></div>`;
   const ids = await todayPicks();
   const item = (id, kind) => {
@@ -622,7 +623,7 @@ function afterCardRender(y) {
 function cardHash(id, params) { const q = new URLSearchParams(params); return `#/card/${encodeURIComponent(id)}${q.toString() ? '?' + q : ''}`; }
 
 /* ---------- TTS player ---------- */
-const tts = { key: null, items: [], idx: 0, mode: 'all', playing: false, rate: 1, lock: null, timer: null };
+const tts = { key: null, items: [], idx: 0, mode: 'all', playing: false, rate: 1, lock: null, timer: null, sleepEnd: 0, sleepTimer: null, playlist: false };
 function secsOf() { return tts.items; }
 function setPlayerItems(key, items, startIdx) {
   if (tts.key !== key) { tts.key = key; tts.playing = false; tts.idx = startIdx || 0; }
@@ -631,6 +632,7 @@ function setPlayerItems(key, items, startIdx) {
 }
 function setupCardPlayer() {
   const c = CARDS.get(route.id); if (!c) return;
+  if (tts.playlist && tts.key === 'card:' + c.id) { updatePlayer(); return; }
   const sec = route.q.get('sec'); const i = (c.sections||[]).findIndex(s => s.id === sec);
   setPlayerItems('card:' + c.id, (c.sections||[]).map(s => ({ label: `${s.chip.split(' ')[0]} ${s.rule}`, text: s.audio_script || `${s.rule}。${s.desc}`, el: 'sec-' + s.id })), i >= 0 ? i : 0);
 }
@@ -639,7 +641,8 @@ function updatePlayer() {
   $('#pPlay').innerHTML = tts.playing ? ICON.pause('#0E4D45') : ICON.play('#0E4D45');
   $('#pPlay').setAttribute('aria-label', tts.playing ? '暫停' : '播放');
   $('#pLbl').textContent = s ? s.label : '';
-  $('#pPos').textContent = secs.length ? `${tts.idx + 1} / ${secs.length}` : '';
+  const sleepLeft = tts.sleepEnd ? Math.max(0, Math.round((tts.sleepEnd - Date.now()) / 1000)) : 0;
+  $('#pPos').textContent = sleepLeft ? `睡眠 ${Math.floor(sleepLeft / 60)}:${pad(sleepLeft % 60)}` : (secs.length ? `${tts.idx + 1} / ${secs.length}` : '');
   $('#pRate').textContent = (tts.rate === 1 ? '1' : tts.rate) + '×';
   document.querySelectorAll('.playing').forEach(e => e.classList.remove('playing'));
   if (tts.playing && s) { const el = document.getElementById(s.el); if (el) el.classList.add('playing'); }
@@ -668,6 +671,23 @@ function speakIdx(i) {
   u.onerror = () => { if (tts.token === token) { tts.playing = false; wakeOff(); updatePlayer(); } };
   setTimeout(() => { if (tts.token === token) speechSynthesis.speak(u); }, 60);
 }
+function allCardsPlaylist(startCardId, startSecIdx) {
+  const ids = activeIds(); const k = Math.max(0, ids.indexOf(startCardId));
+  const order = [...ids.slice(k), ...ids.slice(0, k)]; const items = []; let start = 0;
+  order.forEach((id, n) => { const c = CARDS.get(id); (c.sections || []).forEach((s, i) => {
+    if (n === 0 && i === startSecIdx) start = items.length;
+    items.push({ label: `${c.title}｜${s.chip.split(' ')[0]} ${s.rule}`, text: (i === 0 ? `${c.title}。` : '') + (s.audio_script || `${s.rule}。${s.desc}`), el: id === startCardId ? 'sec-' + s.id : '' }); }); });
+  return { items, start };
+}
+function setSleep(min) {
+  clearInterval(tts.sleepTimer); tts.sleepEnd = 0; tts.sleepTimer = null;
+  if (!min) { toast('已取消睡眠定時，繼續播放'); updatePlayer(); return; }
+  if (route.name === 'card') { const { items, start } = allCardsPlaylist(route.id, tts.idx); tts.items = items; tts.idx = start; tts.playlist = true; }
+  tts.sleepEnd = Date.now() + min * 60000; tts.mode = 'all';
+  tts.sleepTimer = setInterval(() => { if (Date.now() >= tts.sleepEnd) { clearInterval(tts.sleepTimer); tts.sleepEnd = 0; tts.playlist = false; ttsStop(); toast('睡眠定時到，已停止播放'); } else updatePlayer(); }, 1000);
+  toast(`睡眠定時 ${min} 分鐘${route.name === 'card' ? '，會接著播放其他卡' : ''}`);
+  speakIdx(tts.idx);
+}
 function ttsStop() { tts.playing = false; tts.token = null; clearTimeout(tts.timer); if ('speechSynthesis' in window) speechSynthesis.cancel(); wakeOff(); if ($('#pPlay')) updatePlayer(); }
 $('#pPlay').addEventListener('click', () => { if (tts.playing) ttsStop(); else { tts.mode = 'all'; speakIdx(tts.idx); } });
 $('#pRate').addEventListener('click', () => {
@@ -677,14 +697,15 @@ $('#pRate').addEventListener('click', () => {
 $('#pMore').addEventListener('click', e => {
   e.stopPropagation(); if ($('.menu')) { closeMenu(); return; }
   const m = document.createElement('div'); m.className = 'menu';
-  m.innerHTML = `<button data-m="all">播放全部（從頭）</button><button data-m="from">從目前段落開始</button><button data-m="prev">上一段</button><button data-m="next">下一段</button><button data-m="stop">停止</button>`;
+  m.innerHTML = `<button data-m="all">播放全部（從頭）</button><button data-m="from">從目前段落開始</button><button data-m="prev">上一段</button><button data-m="next">下一段</button><button data-m="s10">睡眠定時 10 分鐘</button><button data-m="s20">睡眠定時 20 分鐘</button>${tts.sleepEnd ? '<button data-m="s0">取消睡眠定時</button>' : ''}<button data-m="stop">停止</button>`;
   m.addEventListener('click', ev => {
     const k = ev.target.dataset.m; closeMenu(); const n = secsOf().length;
     if (k === 'all') { tts.mode = 'all'; speakIdx(0); }
     else if (k === 'from') { tts.mode = 'all'; speakIdx(tts.idx); }
     else if (k === 'prev') { const i = Math.max(0, tts.idx - 1); if (tts.playing) speakIdx(i); else { tts.idx = i; updatePlayer(); } }
+    else if (k === 's10' || k === 's20' || k === 's0') setSleep(k === 's0' ? 0 : Number(k.slice(1)));
     else if (k === 'next') { const i = Math.min(n - 1, tts.idx + 1); if (tts.playing) speakIdx(i); else { tts.idx = i; updatePlayer(); } }
-    else ttsStop();
+    else { if (tts.sleepEnd) { clearInterval(tts.sleepTimer); tts.sleepEnd = 0; tts.playlist = false; } ttsStop(); }
   });
   document.body.appendChild(m);
 });
@@ -819,6 +840,7 @@ function renderTeach() {
     ${logs.length ? `<div class="timeline">${logs.map(l => { const c = CARDS.get(l.card_id); const m = METHOD_MAP[l.method];
       return `<div class="tl-item"><div class="when">${esc(l.date.replaceAll('-', '/'))}｜<span>${esc(m ? m.name : l.method)}</span></div>
         <p>${esc(c ? c.title : '（卡片已刪除）')}・${esc(l.audience)}・${esc(l.overall)}${l.duration ? `・${fmtTime(l.duration)}` : ''}</p>
+        ${l.rate ? `<div class="lbl">語速 每分鐘 ${l.rate} 字・字數 ${l.chars}・贅字 ${l.fillers} 次</div>` : ''}
         ${l.checks && l.checks.length ? `<div class="lbl">做到：${esc(l.checks.join('、'))}</div>` : ''}
         ${l.note ? `<div class="lbl">下次改進</div><p>${esc(l.note)}</p>` : ''}
         <button class="tl-del" data-act="dellog" data-id="${esc(l.id)}">刪除這筆</button></div>`; }).join('')}</div>`
@@ -845,14 +867,65 @@ function setupMethodPlayer(id) {
   setPlayerItems('method:' + id, m.steps.map((st, i) => ({ label: `${i + 1} ${st.t}`, text: `第${i + 1}步，${st.t}。${st.d}。`, el: 'node-' + i })), 0);
 }
 /* practice */
-const PR = { target: 180, start: 0, elapsed: 0, timer: null, running: false, rec: null, stream: null, chunks: [], url: null, withRec: true, done: false };
+const PR = { target: 180, start: 0, elapsed: 0, timer: null, running: false, rec: null, stream: null, chunks: [], url: null, withRec: true, withSR: true, done: false, sr: null, srText: '', srInterim: '', srFail: '', transcript: '' };
+const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+const FILLERS = ['嗯', '呃', '那個', '然後', '就是'];
+function speechStats(text, sec) {
+  const chars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbfA-Za-z0-9]/g) || []).length;
+  const fill = FILLERS.map(w => [w, (text.split(w).length - 1)]).filter(x => x[1] > 0);
+  return { chars, rate: sec > 5 ? Math.round(chars / (sec / 60)) : 0, fillers: fill, fillerTotal: fill.reduce((a, x) => a + x[1], 0) };
+}
+function statsText(st) { return `字數 ${st.chars}・語速 每分鐘 ${st.rate} 字・贅字 ${st.fillerTotal ? st.fillers.map(x => x[0] + ' ' + x[1]).join('、') : '0'}`; }
+function rateHint(r) { return !r ? '' : r > 260 ? '偏快，聽的人可能跟不上' : r < 160 ? '偏慢，可以再緊湊一點' : '速度適中'; }
+function startSR() {
+  if (!SRClass) { PR.srFail = 'unsupported'; toast('這個瀏覽器不支援語音轉文字'); return; }
+  const r = new SRClass(); r.lang = 'zh-TW'; r.continuous = true; r.interimResults = true; PR.sr = r;
+  r.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) { const t = e.results[i][0].transcript; if (e.results[i].isFinal) PR.srText += t; else interim += t; }
+    PR.srInterim = interim; const live = $('#prLive'); if (live) live.textContent = (PR.srText + interim) || '（聆聽中…）';
+  };
+  r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'audio-capture' || e.error === 'service-not-allowed') { PR.srFail = e.error; toast('語音轉文字無法啟動，可能與錄音搶麥克風。可取消勾選「同時錄音」再試'); } };
+  r.onend = () => { if (PR.sr === r && PR.running && !PR.srFail) { try { r.start(); } catch (err) {} } else if (r._done) r._done(); };
+  try { r.start(); } catch (err) { PR.srFail = 'start'; }
+}
+function stopSR() {
+  return new Promise(res => {
+    const r = PR.sr; if (!r) return res();
+    PR.sr = null; let fin = false; const done = () => { if (!fin) { fin = true; res(); } };
+    r._done = done; try { r.stop(); } catch (e) { done(); } setTimeout(done, 1500);
+  });
+}
+function coachPrompt(m, c, st, sec, text) {
+  return `請擔任我的口語表達教練。我用「${m.name}」的方法，講解知識卡「${c.title}」。
+
+方法流程：
+${m.steps.map((x, i) => `${i + 1}. ${x.t}：${x.d}`).join('\n')}
+
+卡片重點：${c.one_liner}${c.core ? '；' + c.core : ''}
+
+實際用時 ${fmtTime(sec)}（目標 ${PR.target / 60} 分鐘）；${statsText(st)}
+
+逐字稿（手機語音轉文字，可能有辨識錯字，標點是自動產生或缺漏的）：
+【逐字稿開始】
+${text}
+【逐字稿結束】
+
+請依序給我：
+1. 有沒有照方法流程走，逐步檢查，指出漏掉或順序不對的步驟
+2. 結論是否先講清楚、例子是否具體
+3. 挑出 3 句可以講得更精簡的話，各給一個改寫示範
+4. 語速與贅字的建議
+5. 下次練習只專注的一個重點`;
+}
 function fmtTime(sec) { const a = Math.abs(Math.round(sec)); return `${Math.floor(a / 60)}:${pad(a % 60)}`; }
 function practiceCleanup() {
   clearInterval(PR.timer); PR.running = false; PR.done = false; PR.elapsed = 0;
   try { if (PR.rec && PR.rec.state !== 'inactive') PR.rec.stop(); } catch (e) {}
   if (PR.stream) PR.stream.getTracks().forEach(t => t.stop());
   if (PR.url) URL.revokeObjectURL(PR.url);
-  PR.rec = null; PR.stream = null; PR.url = null; PR.chunks = []; wakeOff();
+  if (PR.sr) { const sr = PR.sr; PR.sr = null; try { sr.abort(); } catch (e) {} }
+  PR.rec = null; PR.stream = null; PR.url = null; PR.chunks = []; PR.srText = ''; PR.srInterim = ''; PR.srFail = ''; PR.transcript = ''; wakeOff();
 }
 function renderPractice(mid, cid) {
   const m = METHOD_MAP[mid], c = cid && CARDS.get(cid);
@@ -876,9 +949,12 @@ function renderPractice(mid, cid) {
       <div class="chips" style="padding:0;justify-content:center">${[60, 180, 300].map(t => `<button class="chip${PR.target === t ? ' on' : ''}" data-act="settime" data-val="${t}" ${PR.running ? 'disabled' : ''}>${t / 60} 分鐘</button>`).join('')}</div>
       <div id="prTime" class="pr-time${over ? ' over' : ''}">${timeTxt}</div>
       <label class="pr-rec"><input type="checkbox" id="prRec" ${PR.withRec ? 'checked' : ''} ${PR.running ? 'disabled' : ''}> 同時錄音（只供重播，不存檔）</label>
+      <label class="pr-rec"><input type="checkbox" id="prSR" ${PR.withSR && SRClass ? 'checked' : ''} ${PR.running || !SRClass ? 'disabled' : ''}> 同時轉文字（供 AI 指導）${SRClass ? '' : '：此瀏覽器不支援'}</label>
+      ${PR.running && PR.sr ? `<div id="prLive" class="pr-live">${esc((PR.srText + PR.srInterim) || '（聆聽中…）')}</div>` : ''}
       ${PR.running ? `<button class="btn solid" data-act="prstop">結束${PR.rec ? '並停止錄音' : ''}</button>` : `<button class="btn solid" data-act="prstart">${PR.done ? '再練一次' : '開始練講'}</button>`}
       ${PR.url ? `<audio controls src="${PR.url}" style="width:100%;margin-top:6px"></audio>` : ''}
     </div>
+    ${PR.done && PR.withSR && !PR.srFail ? transcriptPanel() : ''}
     ${PR.done ? `<div class="form" id="prForm">
       <div class="field"><label>自我檢查（做到的打勾）</label>
         ${['先講了重點', '有舉真實例子', '沒有超時', '講得流暢、少贅字', '對方（或自己）聽得懂'].map(x => `<label class="ck"><input type="checkbox" name="prck" value="${x}"> ${x}</label>`).join('')}</div>
@@ -898,6 +974,7 @@ function prTick() {
 async function prStart() {
   practiceCleanup();
   PR.withRec = $('#prRec') ? $('#prRec').checked : PR.withRec;
+  PR.withSR = $('#prSR') ? $('#prSR').checked && !!SRClass : PR.withSR && !!SRClass;
   if (PR.withRec) {
     try {
       PR.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -912,10 +989,29 @@ async function prStart() {
     } catch (e) { PR.rec = null; toast('無法使用麥克風，這次只計時。可在 Chrome 網站設定中允許麥克風'); }
   }
   PR.start = Date.now(); PR.elapsed = 0; PR.running = true; PR.done = false; PR.buzzed = false;
-  PR.timer = setInterval(prTick, 250); wakeOn(); render(true);
+  PR.timer = setInterval(prTick, 250); wakeOn();
+  if (PR.withSR) startSR();
+  render(true);
 }
-function prStop() {
-  clearInterval(PR.timer); PR.elapsed = (Date.now() - PR.start) / 1000; PR.running = false; PR.done = true; wakeOff();
+function transcriptPanel() {
+  const st = speechStats(PR.transcript, PR.elapsed);
+  if (!PR.transcript) return '<div class="panel"><h3>逐字稿與數據</h3><p>沒有辨識到文字。請確認講話時有網路，或取消勾選「同時錄音」後再試一次。</p></div>';
+  return `<div class="panel"><h3>逐字稿與數據</h3>
+    <div class="kv"><span>語速</span><b>${st.rate ? `每分鐘 ${st.rate} 字` : '講太短，無法計算'}</b></div>${st.rate ? `<p style="margin-top:-6px">${rateHint(st.rate)}</p>` : ''}
+    <div class="kv"><span>字數</span><b>${st.chars} 字</b></div>
+    <div class="kv"><span>贅字</span><b>${st.fillerTotal ? esc(st.fillers.map(x => x[0] + ' ' + x[1] + ' 次').join('、')) : '沒有偵測到'}</b></div>
+    <div class="field"><label for="prText">逐字稿（可修正辨識錯字）</label><textarea id="prText" style="min-height:140px">${esc(PR.transcript)}</textarea></div>
+    <button class="btn solid" data-act="prcoach">複製給 AI 教練</button>
+    <p style="font-size:14px">複製後貼到 Claude 或 ChatGPT 的對話中，就會得到具體建議。語音辨識常會省略「嗯、呃」，實際贅字可能比統計多。</p></div>`;
+}
+function logSpeech() {
+  if (!PR.withSR || PR.srFail) return {};
+  const t = ($('#prText') ? $('#prText').value : PR.transcript).trim(); if (!t) return {};
+  const st = speechStats(t, PR.elapsed); return { transcript: t, rate: st.rate, chars: st.chars, fillers: st.fillerTotal };
+}
+async function prStop() {
+  clearInterval(PR.timer); PR.elapsed = (Date.now() - PR.start) / 1000; PR.running = false; wakeOff();
+  await stopSR(); PR.transcript = (PR.srText + PR.srInterim).trim(); PR.done = true;
   if (PR.rec && PR.rec.state !== 'inactive') PR.rec.stop(); else render(true);
 }
 
@@ -1054,16 +1150,22 @@ document.addEventListener('click', async e => {
     case 'learned': { const id = route.id; if (TEACH.learned[id]) delete TEACH.learned[id]; else TEACH.learned[id] = today(); await saveTeach(); render(true); break; }
     case 'settime': PR.target = Number(el.dataset.val); render(true); break;
     case 'prstart': await prStart(); break;
-    case 'prstop': prStop(); break;
+    case 'prstop': await prStop(); break;
+    case 'prcoach': {
+      const m = METHOD_MAP[route.q.get('m')], c = CARDS.get(route.q.get('c'));
+      const text = ($('#prText') ? $('#prText').value : PR.transcript).trim(); PR.transcript = text;
+      const txt = coachPrompt(m, c, speechStats(text, PR.elapsed), PR.elapsed, text);
+      try { await navigator.clipboard.writeText(txt); toast('已複製，貼到 Claude 或 ChatGPT 即可'); } catch (err) { toast('無法自動複製，請長按逐字稿選取'); } break;
+    }
     case 'prsave': {
       const checks = [...document.querySelectorAll('input[name=prck]:checked')].map(x => x.value);
       const overall = (document.querySelector('input[name=prov]:checked') || {}).value || '普通';
       const audience = (document.querySelector('input[name=praud]:checked') || {}).value || '自己練習';
-      TEACH.logs.push({ id: 'l' + Date.now(), at: new Date().toISOString(), date: today(), method: route.q.get('m'), card_id: route.q.get('c'), audience, overall, checks, note: $('#prNote').value.trim(), duration: Math.round(PR.elapsed) });
+      TEACH.logs.push({ id: 'l' + Date.now(), at: new Date().toISOString(), date: today(), method: route.q.get('m'), card_id: route.q.get('c'), audience, overall, checks, note: $('#prNote').value.trim(), duration: Math.round(PR.elapsed), ...logSpeech() });
       await saveTeach(); practiceCleanup(); toast('已儲存教學紀錄'); go('#/teach'); break;
     }
     case 'dellog': { if (!confirm('刪除這筆教學紀錄？')) return; TEACH.logs = TEACH.logs.filter(l => l.id !== el.dataset.id); await saveTeach(); render(true); break; }
-    case 'arch': libState.archive = !libState.archive; libState.scen = ''; render(true); break;
+    case 'arch': libState.archive = !libState.archive; if (libState.archive) libState.star = false; libState.scen = ''; render(true); break;
     case 'archive': case 'unarchive': {
       const u = userOf(c.id); u.archived = act === 'archive'; await saveUser(u);
       toast(u.archived ? '已封存，可在知識庫「封存區」找回' : '已恢復'); render(true); break;
@@ -1080,7 +1182,7 @@ document.addEventListener('click', async e => {
     case 'random': { const ids = activeIds(); if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
     case 'clearq': libState.q = ''; $('#q').value = ''; $('#results').innerHTML = libraryResults(); el.style.visibility = 'hidden'; $('#q').focus(); break;
     case 'cat': libState.cat = el.dataset.val; render(true); break;
-    case 'star': if (c) { const u = userOf(c.id); u.is_important = !u.is_important; await saveUser(u); render(true); } else { libState.star = !libState.star; render(true); } break;
+    case 'star': if (c) { const u = userOf(c.id); u.is_important = !u.is_important; await saveUser(u); render(true); } else { libState.star = !libState.star; if (libState.star) libState.archive = false; render(true); } break;
     case 'scen': libState.scen = el.dataset.val; render(true); break;
     case 'scenmore': libState.scenOpen = !libState.scenOpen; clampScen(); break;
     case 'back': if (history.length > 1) history.back(); else go('#/home'); break;
