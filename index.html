@@ -60,9 +60,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
 .search-box{display:flex;align-items:center;background:var(--surface);border:2px solid var(--line2);border-radius:26px;padding:0 6px 0 16px}
 .search-box:focus-within{border-color:var(--accent)}
 .search-box input{flex:1;border:none;background:transparent;height:50px;font-size:18px;outline:none;min-width:0}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:4px 16px 10px}
+.chip{flex:none;min-height:38px;padding:0 12px;border-radius:19px;border:1.5px solid var(--line2);background:var(--surface);font-size:15px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip[hidden]{display:none}
+.chip.more{border-style:dashed;border-color:var(--accent);color:var(--accent);font-weight:500}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
 .result{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
 .thumb{width:68px;height:68px;border-radius:10px;object-fit:cover;object-position:top;background:#EDE8DE;flex:none;border:1px solid var(--line)}
@@ -107,6 +108,9 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .copy{flex:none;min-height:40px;padding:0 12px;border-radius:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font-size:15px;font-weight:500}
 .rel{display:flex;justify-content:space-between;align-items:center;min-height:48px;text-decoration:none;font-size:17px;font-weight:500}
 .review{display:flex;justify-content:center;padding:22px 16px 6px}
+.manage{display:flex;justify-content:center;gap:24px;padding:18px 16px 8px;border-top:1px solid var(--line);margin:22px 16px 0}
+.manage button{min-height:44px;border:none;background:transparent;font-size:16px;color:var(--ink2);text-decoration:underline}
+.manage .del{color:var(--danger)}
 .img-fit{margin:10px 12px 0;height:60vh;display:flex;align-items:flex-start;justify-content:center;padding:0;border:none;background:transparent;width:calc(100% - 24px)}
 .img-fit img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
 .img-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 16px 0;min-height:48px;font-size:15px;color:var(--ink2)}
@@ -187,9 +191,9 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.1.0';
 const SCHEMA_VERSION = '1.0';
-const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀'];
+const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
 const COOLDOWN_DAYS = 3;
 const RATES = [0.8, 1, 1.25, 1.5];
@@ -257,9 +261,11 @@ async function loadAll() {
   (await getAll('user')).forEach(u => USER.set(u.card_id, u));
 }
 function newUser(id) {
-  return { card_id: id, is_important: false, created_at: new Date().toISOString(), last_reviewed_at: null, review_count: 0, last_home_shown_at: null, home_shown_count: 0, reflections: [] };
+  return { card_id: id, is_important: false, created_at: new Date().toISOString(), last_reviewed_at: null, review_count: 0, last_home_shown_at: null, home_shown_count: 0, reflections: [], archived: false };
 }
 function userOf(id) { if (!USER.has(id)) USER.set(id, newUser(id)); return USER.get(id); }
+const isActive = id => !userOf(id).archived;
+const activeIds = () => [...CARDS.keys()].filter(isActive);
 async function saveUser(u) { USER.set(u.card_id, u); await put('user', u); }
 async function saveCard(c) { CARDS.set(c.id, c); await put('cards', c); }
 
@@ -353,9 +359,9 @@ function snippet(text, terms) {
 async function todayPicks(swap) {
   const t = today();
   const saved = await getMeta('home_today');
-  if (!swap && saved && saved.date === t && saved.ids.every(id => CARDS.has(id))) return saved.ids;
+  if (!swap && saved && saved.date === t && saved.ids.length && saved.ids.every(id => CARDS.has(id) && isActive(id))) return saved.ids;
   const prevIds = swap && saved && saved.date === t ? saved.ids : [];
-  const fresh = [...CARDS.keys()].filter(id => !prevIds.includes(id));
+  const fresh = activeIds().filter(id => !prevIds.includes(id));
   const all = fresh;
   const cool = id => { const d = daysSince(userOf(id).last_reviewed_at); return d !== null && d < COOLDOWN_DAYS; };
   const reviewOrder = (a, b) => {
@@ -390,7 +396,7 @@ function parseHash() {
   const parts = path.split('/');
   return { name: parts[0], id: parts[1] ? decodeURIComponent(parts[1]) : null, q: new URLSearchParams(qs || '') };
 }
-let route = null; let libState = { q: '', cat: '', scen: '', star: false };
+let route = null; let libState = { q: '', cat: '', scen: '', star: false, scenOpen: false, archive: false };
 async function render(keepScroll) {
   const prev = route; route = parseHash();
   const leavingCard = prev && prev.name === 'card' && (route.name !== 'card' || route.id !== prev.id);
@@ -417,8 +423,8 @@ function go(h) { if (location.hash === h) render(true); else location.hash = h; 
 /* ---------- views: home ---------- */
 async function renderHome() {
   const d = new Date();
-  const head = `<h1 class="page-title">做人知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${CARDS.size} 張卡・v${APP_VERSION}</div>`;
-  if (!CARDS.size) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，到「匯入」貼上即可。<a class="btn solid" href="#/import">前往匯入</a></div>`;
+  const head = `<h1 class="page-title">做人知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
+  if (!activeIds().length) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，到「匯入」貼上即可。<a class="btn solid" href="#/import">前往匯入</a></div>`;
   const ids = await todayPicks();
   const item = (id, kind) => {
     const c = CARDS.get(id), u = userOf(id);
@@ -430,8 +436,8 @@ async function renderHome() {
       <div class="rv">${homeReviewText(id)}</div></a>`;
   };
   const kinds = ids.map((id, i) => i < 2 ? '複習' : '探索');
-  const recent = [...CARDS.values()].sort((a, b) => (userOf(b.id).created_at || '').localeCompare(userOf(a.id).created_at || '')).slice(0, 5);
-  return head + `<div class="sec-row"><h2 class="sec-title">今日重讀</h2>${CARDS.size > 3 ? '<button class="swap" data-act="swap">換一批</button>' : ''}</div>${ids.map((id, i) => item(id, kinds[i])).join('')}
+  const recent = [...CARDS.values()].filter(c => isActive(c.id)).sort((a, b) => (userOf(b.id).created_at || '').localeCompare(userOf(a.id).created_at || '')).slice(0, 5);
+  return head + `<div class="sec-row"><h2 class="sec-title">今日重讀</h2>${activeIds().length > 3 ? '<button class="swap" data-act="swap">換一批</button>' : ''}</div>${ids.map((id, i) => item(id, kinds[i])).join('')}
     <div class="wrap" style="margin-top:4px"><button class="btn" data-act="random">隨機抽一張</button></div>
     <h2 class="sec-title">最近新增</h2>
     ${recent.map(c => `<a class="row-link" href="#/card/${encodeURIComponent(c.id)}"><div><div class="t">${esc(c.title)}</div><div class="s">${esc(c.one_liner)}</div></div></a>`).join('')}`;
@@ -443,10 +449,11 @@ function reviewedText(id) { const d = daysSince(userOf(id).last_reviewed_at); re
 function libraryResults() {
   const res = search(libState.q);
   let list = res ? res : [...CARDS.values()].sort((a,b)=>a.title.localeCompare(b.title,'zh-Hant')).map(c => ({ card: c, sec: null, terms: [] }));
+  list = list.filter(r => libState.archive ? userOf(r.card.id).archived : !userOf(r.card.id).archived);
   if (libState.cat) list = list.filter(r => r.card.category === libState.cat);
   if (libState.star) list = list.filter(r => userOf(r.card.id).is_important);
-  if (libState.scen) list = list.filter(r => (r.card.scenarios||[]).includes(libState.scen) || (r.card.sections||[]).some(s => (s.scenarios||[]).includes(libState.scen)));
-  if (!list.length) return `<div class="empty">${res ? `找不到「${esc(libState.q)}」。試試較短的字，或用空白分開多個詞。` : '這個篩選條件下沒有卡片。'}</div>`;
+  if (libState.scen) list = list.filter(r => (r.card.scenarios||[]).includes(libState.scen));
+  if (!list.length) return `<div class="empty">${libState.archive && !res ? '封存區是空的。過時的卡可以在卡片最下方按「封存這張卡」。' : res ? `找不到「${esc(libState.q)}」。試試較短的字，或用空白分開多個詞。` : '這個篩選條件下沒有卡片。'}</div>`;
   return list.map(r => {
     const c = r.card;
     const qp = new URLSearchParams(); if (r.sec) qp.set('sec', r.sec.id); if (libState.q) qp.set('q', libState.q.trim()); if (r.sec || libState.q) qp.set('tab', 'digest');
@@ -459,14 +466,29 @@ function libraryResults() {
   }).join('');
 }
 function renderLibrary() {
-  const scens = [...new Set([...CARDS.values()].flatMap(c => [...(c.scenarios||[]), ...(c.sections||[]).flatMap(s => s.scenarios||[])]))];
+  const scens = [...new Set([...CARDS.values()].filter(c => libState.archive ? userOf(c.id).archived : isActive(c.id)).flatMap(c => c.scenarios || []))];
   const chip = (act, val, label, on) => `<button class="chip${on ? ' on' : ''}" data-act="${act}" data-val="${esc(val)}">${esc(label)}</button>`;
   return `<div class="search"><div class="search-box"><input id="q" type="search" enterkeyhint="search" placeholder="搜尋：遇到的狀況、問題或關鍵字…" value="${esc(libState.q)}" aria-label="搜尋知識卡"><button class="icon-btn" data-act="clearq" aria-label="清空搜尋" ${libState.q ? '' : 'style="visibility:hidden"'}>${ICON.clear}</button></div></div>
-    <div class="chips" aria-label="分類">${chip('cat','', '全部分類', !libState.cat)}${CATEGORIES.map(c => chip('cat', c, c, libState.cat === c)).join('')}${chip('star','', '★ 重要', libState.star)}</div>
-    ${scens.length ? `<div class="chips" aria-label="情境">${chip('scen','', '全部情境', !libState.scen)}${scens.map(s => chip('scen', s, s, libState.scen === s)).join('')}</div>` : ''}
+    <div class="chips" aria-label="分類">${chip('cat','', '全部分類', !libState.cat)}${CATEGORIES.map(c => chip('cat', c, c, libState.cat === c)).join('')}${chip('star','', '★ 重要', libState.star)}${chip('arch','', '封存區', libState.archive)}</div>
+    ${scens.length ? `<div class="chips" id="scenChips" aria-label="情境">${chip('scen','', '全部情境', !libState.scen)}${scens.map(s => chip('scen', s, s, libState.scen === s)).join('')}<button class="chip more" data-act="scenmore" hidden>${libState.scenOpen ? '收合' : '更多情境'}</button></div>` : ''}
     <div id="results">${libraryResults()}</div>`;
 }
+function clampScen() {
+  const box = $('#scenChips'); if (!box) return;
+  const more = box.querySelector('.more');
+  const chips = [...box.querySelectorAll('.chip:not(.more)')];
+  chips.forEach(c => c.hidden = false); more.hidden = true;
+  const tops = [...new Set(chips.map(c => c.offsetTop))].sort((a, b) => a - b);
+  if (tops.length <= 2) return;
+  more.hidden = false;
+  if (libState.scenOpen) { more.textContent = '收合'; return; }
+  more.textContent = '更多情境';
+  const limit = tops[1];
+  chips.forEach(c => { if (c.offsetTop > limit && !c.classList.contains('on')) c.hidden = true; });
+  for (let i = chips.length - 1; i > 0 && more.offsetTop > limit; i--) if (!chips[i].hidden && !chips[i].classList.contains('on')) chips[i].hidden = true;
+}
 function bindLibrary() {
+  clampScen();
   const q = $('#q'); let timer;
   q.addEventListener('input', () => {
     clearTimeout(timer);
@@ -488,6 +510,7 @@ function renderCard(r) {
   if (tab === 'image') body = renderImageTab(c);
   else if (tab === 'reflect') body = renderReflectTab(c, u, r.q.get('form') === '1');
   else body = renderDigestTab(c, u, r);
+  const archBanner = u.archived ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px">這張卡已封存，不會出現在首頁和搜尋。<button class="copy" data-act="unarchive">恢復</button></div>` : '';
   return `<div class="card-head">
     <div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button>
       <h1 class="card-title">${esc(c.title)}</h1>
@@ -496,7 +519,7 @@ function renderCard(r) {
     <button class="add-ref" data-act="addref">＋ 記錄一次實際體會</button>
     <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>`}
     <div class="tabs" role="tablist">${tabBtn('image','圖卡')}${tabBtn('digest','精華')}${tabBtn('reflect','體會')}</div>
-  </div>${body}`;
+  </div>${archBanner}${body}`;
 }
 function renderImageTab(c) {
   if (!c.image_url) return `<div class="empty">這張卡還沒有原圖。上傳後會壓縮存到 Cloudinary，看過一次之後離線也能看。<button class="btn solid" data-act="upload">上傳原圖</button></div>`;
@@ -516,12 +539,13 @@ function renderDigestTab(c, u, r) {
       <div class="src">${esc(src)}${src ? '・' : ''}${esc(natureText(s.nature))}</div>${ext}</section>`;
   }).join('');
   const prompts = (c.prompts || []).length ? `<div class="box"><h4>實用提問句</h4>${c.prompts.map((p, i) => `<div class="prompt"><span>${esc(p)}</span><button class="copy" data-act="copy" data-idx="${i}">複製</button></div>`).join('')}</div>` : '';
-  const rels = (c.related_card_ids || []).filter(id => CARDS.has(id));
+  const rels = (c.related_card_ids || []).filter(id => CARDS.has(id) && isActive(id));
   const related = rels.length ? `<div class="box"><h4>關聯卡片</h4>${rels.map(id => `<a class="rel" href="#/card/${encodeURIComponent(id)}">${esc(CARDS.get(id).title)}<span aria-hidden="true">›</span></a>`).join('')}</div>` : '';
   return `${banner}${c.core ? `<div class="core"><b>核心　</b>${esc(c.core)}</div>` : ''}
     <div class="jump" style="margin-top:12px">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
     <div class="sections">${secs}</div>${prompts}${related}
-    <div class="review">${reviewBtn(u)}</div>`;
+    <div class="review">${reviewBtn(u)}</div>
+    <div class="manage"><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button class="del" data-act="delcard">刪除這張卡</button></div>`;
 }
 function reviewBtn(u) {
   return u.last_reviewed_at === today()
@@ -706,7 +730,7 @@ function normalizeCard(raw, errors) {
   if (!raw.id || typeof raw.id !== 'string') return bad('缺少 id');
   if (!raw.title) return bad('缺少 title');
   if (!raw.one_liner) return bad('缺少 one_liner');
-  if (!CATEGORIES.includes(raw.category)) return bad(`分類「${raw.category || ''}」不在 6 大分類內`);
+  if (!CATEGORIES.includes(raw.category)) return bad(`分類「${raw.category || ''}」不在分類清單內（${CATEGORIES.join('、')}）`);
   const arr = v => Array.isArray(v) ? v.filter(x => x !== null && x !== '') : (v ? [v] : []);
   const nat = arr(raw.nature); const badNat = nat.filter(n => !NATURES.includes(n));
   if (!nat.length) return bad('缺少內容性質 nature');
@@ -776,7 +800,7 @@ async function renderSettings() {
       <p>備份檔包含所有卡片、★、複習紀錄與體會。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
       <div class="btn-row"><button class="btn solid" data-act="backup">匯出完整備份</button><button class="btn danger" data-act="restore">從備份還原</button></div></div>
     <div class="panel"><h3>關於</h3>
-      <div class="kv"><span>卡片數</span><b>${CARDS.size} 張</b></div>
+      <div class="kv"><span>卡片數</span><b>${activeIds().length} 張${CARDS.size > activeIds().length ? `（另有封存 ${CARDS.size - activeIds().length} 張）` : ''}</b></div>
       <div class="kv"><span>永久儲存</span><b>${persisted === null ? '無法確認' : persisted ? '已啟用' : '未啟用'}</b></div>
       <div class="kv"><span>版本</span><b>v${APP_VERSION}</b></div></div>`;
 }
@@ -811,12 +835,26 @@ document.addEventListener('click', async e => {
   const c = route && route.name === 'card' ? CARDS.get(route.id) : null;
   const params = () => Object.fromEntries(route.q.entries());
   switch (act) {
+    case 'arch': libState.archive = !libState.archive; libState.scen = ''; render(true); break;
+    case 'archive': case 'unarchive': {
+      const u = userOf(c.id); u.archived = act === 'archive'; await saveUser(u);
+      toast(u.archived ? '已封存，可在知識庫「封存區」找回' : '已恢復'); render(true); break;
+    }
+    case 'delcard': {
+      if (!confirm(`刪除「${c.title}」？卡片內容、複習紀錄和體會都會一起刪除，無法復原。\n\n只是過時的話，建議改用「封存」。`)) return;
+      const id = c.id;
+      await idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').delete(id); t.objectStore('user').delete(id); });
+      CARDS.delete(id); USER.delete(id);
+      const saved = await getMeta('home_today'); if (saved && saved.ids) { saved.ids = saved.ids.filter(x => x !== id); await setMeta('home_today', saved); }
+      ttsStop(); toast('已刪除'); location.hash = '#/library'; break;
+    }
     case 'swap': await todayPicks(true); render(true); toast('已換一批'); break;
-    case 'random': { const ids = [...CARDS.keys()]; if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
+    case 'random': { const ids = activeIds(); if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
     case 'clearq': libState.q = ''; $('#q').value = ''; $('#results').innerHTML = libraryResults(); el.style.visibility = 'hidden'; $('#q').focus(); break;
     case 'cat': libState.cat = el.dataset.val; render(true); break;
     case 'star': if (c) { const u = userOf(c.id); u.is_important = !u.is_important; await saveUser(u); render(true); } else { libState.star = !libState.star; render(true); } break;
     case 'scen': libState.scen = el.dataset.val; render(true); break;
+    case 'scenmore': libState.scenOpen = !libState.scenOpen; clampScen(); break;
     case 'back': if (history.length > 1) history.back(); else go('#/home'); break;
     case 'tab': { const p = params(); p.tab = el.dataset.val; delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
     case 'addref': { const p = params(); p.tab = 'reflect'; p.form = '1'; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
