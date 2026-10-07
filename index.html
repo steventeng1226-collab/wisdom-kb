@@ -165,8 +165,44 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .field label.ck{display:flex;margin:0;font-size:17px;font-weight:400;color:var(--ink)}
 .field label.ckchip{display:inline-flex;margin:0;font-size:15px;font-weight:400;color:var(--ink)}
 .ckchip input{width:18px;height:18px}
+/* v1.4 */
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-right:8px}
+.top-row .page-title{flex:1}
+.top-acts{display:flex;gap:2px;padding-top:12px}
+.today-card .kind{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--ink2);margin-bottom:6px}
+.kb{background:#E2F0EC;color:var(--accent);font-weight:700;border-radius:6px;padding:1px 8px}
+.kstar{color:var(--star)}
+.today-card .meta{font-size:15px}
+.today-card .rv.ok{color:var(--accent);font-weight:500}
+.prog{font-family:var(--sans);font-size:17px;color:var(--accent)}
+.rvbox{width:100%;background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.rvh{font-weight:700;color:var(--accent);font-size:16px}
+.rvbtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rvb{min-height:50px;border-radius:10px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font-size:16px;font-weight:700;padding:0 4px}
+.rvb.on{background:var(--accent);color:#fff}
+.rvcap{font-size:14px;color:var(--ink2);line-height:1.5}
+.srow{display:flex;align-items:center;gap:6px}
+.srow .search-box{flex:1;min-width:0}
+.frow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:2px 16px 8px}
+.fbtn{min-height:42px;border-radius:21px;border:1.5px solid var(--line2);background:var(--surface);font-size:15px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.fbtn.open{background:#E2F0EC}
+.chips.sheet{margin:0 16px 8px;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px}
+.tag{min-height:36px;border:none;border-radius:18px;background:var(--accent);color:#fff;font-size:14px;padding:0 12px}
+.count{padding:4px 16px;font-size:14px;color:var(--muted)}
+.linkbtn{min-height:44px;border:none;background:transparent;color:var(--accent);font-size:16px;font-weight:500;padding:0;text-decoration:underline;text-align:left}
+.picker{border-top:1px solid var(--line);margin-top:6px;padding-top:4px;max-height:360px;overflow-y:auto}
+.ck.lock{color:var(--muted)}
+.prevcard{border-top:1px solid #EEE9DF;padding:6px 0}
+.chk{font-size:15px;padding:2px 0 2px 32px}
+.chk.g{color:var(--accent)}
+.chk.w{color:var(--hit-ink)}
+details summary{min-height:44px;display:flex;align-items:center;font-size:16px;color:var(--ink2);cursor:pointer}
+.menu.top{top:calc(56px + env(safe-area-inset-top,0px));bottom:auto}
+.thumb{width:60px;height:80px}
 /* tabbar */
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:var(--safe-b)}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:var(--safe-b)}
 #tabbar.hide{display:none}
 #tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:64px;text-decoration:none;color:var(--ink2);font-size:14px;font-weight:500}
 #tabbar a.on{color:var(--accent);font-weight:700}
@@ -198,7 +234,6 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
   <a href="#/home" data-tab="home"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>首頁</a>
   <a href="#/library" data-tab="library"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg>知識庫</a>
   <a href="#/teach" data-tab="teach"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l4-4 4 4M7 8h6M7 11h9"/></svg>教學</a>
-  <a href="#/import" data-tab="import"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>匯入</a>
   <a href="#/settings" data-tab="settings"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/></svg>設定</a>
 </nav>
 
@@ -218,7 +253,7 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 
 <script>
 'use strict';
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -248,6 +283,9 @@ const ICON = {
   pause: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="${c}"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`,
   check: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
   expand: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  dice: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B1B1B" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="#1B1B1B"/><circle cx="15" cy="15" r="1.3" fill="#1B1B1B"/><circle cx="15" cy="9" r="1.3" fill="#1B1B1B"/><circle cx="9" cy="15" r="1.3" fill="#1B1B1B"/></svg>',
+  plus: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0E4D45" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  more: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#1B1B1B"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
   clear: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
 };
 
@@ -288,7 +326,7 @@ async function loadAll() {
   (await getAll('user')).forEach(u => USER.set(u.card_id, u));
 }
 function newUser(id) {
-  return { card_id: id, is_important: false, created_at: new Date().toISOString(), last_reviewed_at: null, review_count: 0, last_home_shown_at: null, home_shown_count: 0, reflections: [], archived: false };
+  return { card_id: id, is_important: false, created_at: new Date().toISOString(), last_reviewed_at: null, review_count: 0, last_home_shown_at: null, home_shown_count: 0, reflections: [], archived: false, interval: 0, next_review_at: null, familiarity: null, links: [] };
 }
 function userOf(id) { if (!USER.has(id)) USER.set(id, newUser(id)); return USER.get(id); }
 const isActive = id => !userOf(id).archived;
@@ -297,7 +335,7 @@ async function saveUser(u) { USER.set(u.card_id, u); await put('user', u); }
 async function saveCard(c) { CARDS.set(c.id, c); await put('cards', c); }
 
 /* ---------- Cloudinary ---------- */
-function thumbUrl(url) { return url && url.includes('/upload/') ? url.replace('/upload/', '/upload/c_fill,g_north,w_200,h_200,q_auto,f_auto/') : url; }
+function thumbUrl(url) { return url && url.includes('/upload/') ? url.replace('/upload/', '/upload/c_fill,g_north,w_180,h_240,q_auto,f_auto/') : url; }
 function compressImage(file) {
   return new Promise((res, rej) => {
     const img = new Image(); const u = URL.createObjectURL(file);
@@ -336,6 +374,39 @@ function pickImageFor(cardId, after) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.className = 'hidden-file';
   inp.onchange = async () => { const f = inp.files[0]; inp.remove(); if (f && await uploadImage(cardId, f)) after && after(); };
   document.body.appendChild(inp); inp.click();
+}
+
+const LADDER = [1, 3, 7, 14, 30, 60];
+const LEVELS = { familiar: '已熟悉', fuzzy: '有點模糊', again: '再看一次' };
+function addDays(ds, n) { const [y, m, d] = ds.split('-').map(Number); const t = new Date(y, m - 1, d + n); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`; }
+function md(ds) { const [, m, d] = ds.split('-').map(Number); return `${m}/${d}`; }
+function isDue(id) { const u = userOf(id); return !u.next_review_at || u.next_review_at <= today(); }
+function reviewAs(u, level) {
+  const t = today();
+  if (u.last_reviewed_at !== t) { u.iv_base = u.interval || 0; u.review_count += 1; u.last_reviewed_at = t; }
+  const base = u.iv_base || 0;
+  if (level === 'familiar') { u.interval = LADDER.find(x => x > base) || LADDER[LADDER.length - 1]; u.next_review_at = addDays(t, u.interval); }
+  else if (level === 'fuzzy') { u.interval = base; u.next_review_at = addDays(t, 1); }
+  else { u.interval = 0; u.next_review_at = addDays(t, 1); }
+  u.familiarity = level;
+}
+function homeReviewText(id) {
+  const u = userOf(id); const lv = LEVELS[u.familiarity] || '';
+  if (!u.last_reviewed_at) return '尚未複習';
+  if (u.last_reviewed_at === today()) return `今天已複習${lv ? '・' + lv : ''}`;
+  const d = daysSince(u.last_reviewed_at);
+  if (isDue(id)) return `${d} 天未複習・該複習了`;
+  return `${lv ? lv + '・' : ''}下次 ${md(u.next_review_at)}`;
+}
+function reviewBox(u) {
+  const t = today(); const todayDone = u.last_reviewed_at === t;
+  const btn = (k) => `<button class="rvb${todayDone && u.familiarity === k ? ' on' : ''}" data-act="rv" data-val="${k}">${LEVELS[k]}</button>`;
+  let cap = '尚未複習。看完後選一個，APP 會排好下次複習日。';
+  if (u.last_reviewed_at) {
+    const nx = u.next_review_at ? `下次 ${md(u.next_review_at)}（${Math.max(0, -daysSince(u.next_review_at))} 天後）` : '';
+    cap = todayDone ? `今天已複習・${LEVELS[u.familiarity] || ''}・${nx}・累積 ${u.review_count} 次` : `上次 ${md(u.last_reviewed_at)}・${LEVELS[u.familiarity] || ''}・累積 ${u.review_count} 次`;
+  }
+  return `<div class="rvbox" id="rvbox"><div class="rvh">這張卡記得多少？</div><div class="rvbtns">${btn('familiar')}${btn('fuzzy')}${btn('again')}</div><div class="rvcap">${cap}</div></div>`;
 }
 
 /* ---------- search ---------- */
@@ -392,9 +463,10 @@ async function todayPicks(swap) {
   const all = fresh;
   const cool = id => { const d = daysSince(userOf(id).last_reviewed_at); return d !== null && d < COOLDOWN_DAYS; };
   const reviewOrder = (a, b) => {
-    const ua = userOf(a), ub = userOf(b);
+    const ua = userOf(a), ub = userOf(b), xa = isDue(a), xb = isDue(b);
+    if (xa !== xb) return xa ? -1 : 1;
     if (ua.is_important !== ub.is_important) return ua.is_important ? -1 : 1;
-    const da = ua.last_reviewed_at || '', dbb = ub.last_reviewed_at || '';
+    const da = ua.next_review_at || '', dbb = ub.next_review_at || '';
     if (da !== dbb) return da < dbb ? -1 : 1;
     return ua.review_count - ub.review_count;
   };
@@ -405,9 +477,8 @@ async function todayPicks(swap) {
     const da = ua.last_home_shown_at || '', dbb = ub.last_home_shown_at || '';
     return da < dbb ? -1 : da > dbb ? 1 : 0;
   };
-  const eligible = all.filter(id => !cool(id));
-  const picks = eligible.slice().sort(reviewOrder).slice(0, 2);
-  const ex = eligible.filter(id => !picks.includes(id)).sort(exploreOrder)[0];
+  const picks = all.filter(id => isDue(id) && userOf(id).last_reviewed_at !== t).sort(reviewOrder).slice(0, 2);
+  const ex = all.filter(id => !picks.includes(id) && !cool(id)).sort(exploreOrder)[0];
   if (ex) picks.push(ex);
   if (picks.length < 3) all.filter(id => !picks.includes(id)).sort(reviewOrder).slice(0, 3 - picks.length).forEach(id => picks.push(id));
   if (picks.length < 3) prevIds.filter(id => !picks.includes(id)).sort(reviewOrder).slice(0, 3 - picks.length).forEach(id => picks.push(id));
@@ -423,7 +494,7 @@ function parseHash() {
   const parts = path.split('/');
   return { name: parts[0], id: parts[1] ? decodeURIComponent(parts[1]) : null, q: new URLSearchParams(qs || '') };
 }
-let route = null; let libState = { q: '', cat: '', scen: '', star: false, scenOpen: false, archive: false };
+let route = null; let libState = { q: '', cat: '', scen: '', star: false, archive: false, sort: 'name', sheet: null };
 async function render(keepScroll) {
   const prev = route; route = parseHash();
   const pk = r => r && (r.name === 'card' || r.name === 'method') ? r.name + ':' + r.id : null;
@@ -457,72 +528,84 @@ function go(h) { if (location.hash === h) render(true); else location.hash = h; 
 /* ---------- views: home ---------- */
 async function renderHome() {
   const d = new Date();
-  const head = `<h1 class="page-title">為人處世知識庫</h1><div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
-  if (!activeIds().length) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，到「匯入」貼上即可。<a class="btn solid" href="#/import">前往匯入</a></div>`;
+  const head = `<div class="top-row"><h1 class="page-title">為人處世知識庫</h1><div class="top-acts">
+      <button class="icon-btn" data-act="random" aria-label="隨機抽一張">${ICON.dice}</button>
+      <a class="icon-btn" href="#/import" aria-label="新增知識卡">${ICON.plus}</a></div></div>
+    <div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
+  if (!activeIds().length) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，按右上角「＋」匯入。<a class="btn solid" href="#/import">新增知識卡</a></div>`;
+  const last = await getMeta('last_backup_at'); const bd = last ? daysSince(last) : null;
+  const backup = (bd === null || bd >= 14) ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px">${bd === null ? '還沒有備份過' : `已 ${bd} 天沒有備份`}。資料只存在這支手機，建議定期備份。<button class="copy" data-act="backup">立即備份</button></div>` : '';
   const ids = await todayPicks();
+  const done = ids.filter(id => userOf(id).last_reviewed_at === today()).length;
   const item = (id, kind) => {
     const c = CARDS.get(id), u = userOf(id);
-    return `<a class="today-card" href="#/card/${encodeURIComponent(id)}">
-      <div class="kind">${kind}${u.is_important ? '・★ 重要' : ''}</div>
+    return `<a class="today-card" href="#/card/${encodeURIComponent(id)}?tab=digest">
+      <div class="kind"><span class="kb">${kind}</span>${u.is_important ? '<span class="kstar">★</span>' : ''}${esc(c.category)}・${esc(c.title)}</div>
       <div class="one">${esc(c.one_liner)}</div>
-      <div class="ttl">${esc(c.title)}</div>
-      <div class="meta"><span class="pill">${esc(c.category)}</span><span>${esc((c.scenarios||[]).slice(0,3).join('｜'))}</span></div>
-      <div class="rv">${homeReviewText(id)}</div></a>`;
+      ${(c.scenarios || []).length ? `<div class="meta">${esc(c.scenarios.slice(0, 3).join('｜'))}</div>` : ''}
+      <div class="rv${userOf(id).last_reviewed_at === today() ? ' ok' : ''}">${homeReviewText(id)}</div></a>`;
   };
   const kinds = ids.map((id, i) => i < 2 ? '複習' : '探索');
-  const recent = [...CARDS.values()].filter(c => isActive(c.id)).sort((a, b) => (userOf(b.id).created_at || '').localeCompare(userOf(a.id).created_at || '')).slice(0, 5);
-  return head + `<div class="sec-row"><h2 class="sec-title">今日重讀</h2>${activeIds().length > 3 ? '<button class="swap" data-act="swap">換一批</button>' : ''}</div>${ids.map((id, i) => item(id, kinds[i])).join('')}
-    <div class="wrap" style="margin-top:4px"><button class="btn" data-act="random">隨機抽一張</button></div>
+  const recentAll = [...CARDS.values()].filter(c => isActive(c.id)).sort((a, b) => (userOf(b.id).created_at || '').localeCompare(userOf(a.id).created_at || ''));
+  return head + backup + `<div class="sec-row"><h2 class="sec-title">今日重讀　<span class="prog">${done}／${ids.length}</span></h2>${activeIds().length > 3 ? '<button class="swap" data-act="swap">換一批</button>' : ''}</div>${ids.map((id, i) => item(id, kinds[i])).join('')}
     <h2 class="sec-title">最近新增</h2>
-    ${recent.map(c => `<a class="row-link" href="#/card/${encodeURIComponent(c.id)}"><div><div class="t">${esc(c.title)}</div><div class="s">${esc(c.one_liner)}</div></div></a>`).join('')}`;
+    ${recentAll.slice(0, 3).map(c => `<a class="row-link" href="#/card/${encodeURIComponent(c.id)}"><div><div class="t">${esc(c.title)}</div><div class="s">${esc(c.one_liner)}</div></div></a>`).join('')}
+    ${recentAll.length > 3 ? `<div class="wrap" style="margin-top:10px"><button class="btn" data-act="morerecent">查看更多（共 ${recentAll.length} 張）</button></div>` : ''}`;
 }
 
 /* ---------- views: library ---------- */
-function homeReviewText(id) { const d = daysSince(userOf(id).last_reviewed_at); return d === null ? '尚未複習' : d === 0 ? '今天已複習' : `${d} 天未複習`; }
 function reviewedText(id) { const d = daysSince(userOf(id).last_reviewed_at); return d === null ? '尚未複習' : d === 0 ? '今天複習' : `${d} 天前複習`; }
+const SORTS = { name: '名稱', recent: '最近新增', stale: '最久沒複習', next: '下次複習日' };
+function sortCards(arr) {
+  const s = libState.sort, U = c => userOf(c.id);
+  if (s === 'recent') return arr.sort((a, b) => (U(b).created_at || '').localeCompare(U(a).created_at || ''));
+  if (s === 'stale') return arr.sort((a, b) => (U(a).last_reviewed_at || '').localeCompare(U(b).last_reviewed_at || ''));
+  if (s === 'next') return arr.sort((a, b) => (U(a).next_review_at || '').localeCompare(U(b).next_review_at || ''));
+  return arr.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
+}
 function libraryResults() {
   const res = search(libState.q);
-  let list = res ? res : [...CARDS.values()].sort((a,b)=>a.title.localeCompare(b.title,'zh-Hant')).map(c => ({ card: c, sec: null, terms: [] }));
+  let list = res ? res : sortCards([...CARDS.values()]).map(c => ({ card: c, sec: null, terms: [] }));
   list = list.filter(r => libState.archive ? userOf(r.card.id).archived : !userOf(r.card.id).archived);
   if (libState.cat) list = list.filter(r => r.card.category === libState.cat);
   if (libState.star) list = list.filter(r => userOf(r.card.id).is_important);
-  if (libState.scen) list = list.filter(r => (r.card.scenarios||[]).includes(libState.scen));
-  if (!list.length) return `<div class="empty">${libState.archive && !res ? '封存區是空的。過時的卡可以在卡片最下方按「封存這張卡」。' : res ? `找不到「${esc(libState.q)}」。試試較短的字，或用空白分開多個詞。` : '這個篩選條件下沒有卡片。'}</div>`;
-  return list.map(r => {
+  if (libState.scen) list = list.filter(r => (r.card.scenarios || []).includes(libState.scen));
+  const archN = [...CARDS.keys()].filter(id => userOf(id).archived).length;
+  const archLink = !libState.archive && archN ? `<div class="wrap" style="margin:16px 0"><button class="linkbtn" data-act="arch">查看封存區（${archN} 張）</button></div>` : '';
+  if (!list.length) return `<div class="empty">${libState.archive && !res ? '封存區是空的。過時的卡可以在卡片右上角「⋮」選「封存這張卡」。' : res ? `找不到「${esc(libState.q)}」。試試較短的字，或用空白分開多個詞。` : '這個篩選條件下沒有卡片。'}</div>` + archLink;
+  return `<div class="count">${list.length} 張</div>` + list.map(r => {
     const c = r.card;
-    const qp = new URLSearchParams(); if (r.sec) qp.set('sec', r.sec.id); if (libState.q) qp.set('q', libState.q.trim()); if (r.sec || libState.q) qp.set('tab', 'digest');
+    const qp = new URLSearchParams(); if (r.sec) qp.set('sec', r.sec.id); if (libState.q) qp.set('q', libState.q.trim()); qp.set('tab', 'digest');
     const th = c.image_url ? `<img class="thumb" src="${esc(thumbUrl(c.image_url))}" alt="" loading="lazy">` : `<div class="thumb ph">${esc((c.title.match(/[\p{L}\p{N}]/u) || [''])[0])}</div>`;
     const hit = r.sec ? `<div class="hitline">命中：${esc(r.sec.chip.split(' ')[0])} ${highlight(r.sec.rule, r.terms)}<br>${highlight(snippet(r.sec.desc, r.terms), r.terms)}</div>` : '';
-    return `<a class="result" href="#/card/${encodeURIComponent(c.id)}${qp.toString() ? '?' + qp : ''}">${th}<div style="min-width:0;flex:1">
+    return `<a class="result" href="#/card/${encodeURIComponent(c.id)}?${qp}">${th}<div style="min-width:0;flex:1">
       ${userOf(c.id).is_important ? '<span class="star-mark" aria-label="重要">★</span>' : ''}<div class="t" style="padding-right:22px">${r.terms.length ? highlight(c.title, r.terms) : esc(c.title)}</div>
       <div class="o">${r.terms.length ? highlight(c.one_liner, r.terms) : esc(c.one_liner)}</div>${hit}
-      <div class="d">${esc(c.category)}・${reviewedText(c.id)}</div></div></a>`;
-  }).join('');
+      <div class="d">${esc(c.category)}・${homeReviewText(c.id)}</div></div></a>`;
+  }).join('') + archLink;
 }
 function renderLibrary() {
   const scens = [...new Set([...CARDS.values()].filter(c => libState.archive ? userOf(c.id).archived : isActive(c.id)).flatMap(c => c.scenarios || []))];
-  const chip = (act, val, label, on) => `<button class="chip${on ? ' on' : ''}" data-act="${act}" data-val="${esc(val)}">${esc(label)}</button>`;
-  return `<div class="search"><div class="search-box"><input id="q" type="search" enterkeyhint="search" placeholder="搜尋：遇到的狀況、問題或關鍵字…" value="${esc(libState.q)}" aria-label="搜尋知識卡"><button class="icon-btn" data-act="clearq" aria-label="清空搜尋" ${libState.q ? '' : 'style="visibility:hidden"'}>${ICON.clear}</button></div></div>
-    <div class="chips" aria-label="分類">${chip('cat','', '全部分類', !libState.cat)}${CATEGORIES.map(c => chip('cat', c, c, libState.cat === c)).join('')}${chip('star','', '★ 重要', libState.star)}${chip('arch','', '封存區', libState.archive)}</div>
-    ${scens.length ? `<div class="chips" id="scenChips" aria-label="情境">${chip('scen','', '全部情境', !libState.scen)}${scens.map(s => chip('scen', s, s, libState.scen === s)).join('')}<button class="chip more" data-act="scenmore" hidden>${libState.scenOpen ? '收合' : '更多情境'}</button></div>` : ''}
+  const fb = (key, label, on) => `<button class="fbtn${on ? ' on' : ''}${libState.sheet === key ? ' open' : ''}" data-act="sheet" data-val="${key}">${esc(label)} ▾</button>`;
+  const opt = (act, val, label, on) => `<button class="chip${on ? ' on' : ''}" data-act="${act}" data-val="${esc(val)}">${esc(label)}</button>`;
+  let sheet = '';
+  if (libState.sheet === 'cat') sheet = opt('setcat', '', '全部分類', !libState.cat) + CATEGORIES.map(c => opt('setcat', c, c, libState.cat === c)).join('');
+  if (libState.sheet === 'scen') sheet = opt('setscen', '', '全部情境', !libState.scen) + scens.map(s => opt('setscen', s, s, libState.scen === s)).join('');
+  if (libState.sheet === 'sort') sheet = Object.entries(SORTS).map(([k, v]) => opt('setsort', k, v, libState.sort === k)).join('');
+  const tags = [];
+  if (libState.cat) tags.push(['cat', libState.cat]);
+  if (libState.scen) tags.push(['scen', libState.scen]);
+  if (libState.star) tags.push(['star', '★ 重要']);
+  if (libState.archive) tags.push(['arch', '封存區']);
+  if (libState.sort !== 'name') tags.push(['sort', '排序：' + SORTS[libState.sort]]);
+  return `<div class="search"><div class="srow"><div class="search-box"><input id="q" type="search" enterkeyhint="search" placeholder="搜尋：遇到的狀況、問題或關鍵字…" value="${esc(libState.q)}" aria-label="搜尋知識卡"><button class="icon-btn" data-act="clearq" aria-label="清空搜尋" ${libState.q ? '' : 'style="visibility:hidden"'}>${ICON.clear}</button></div>
+      <a class="icon-btn" href="#/import" aria-label="新增知識卡">${ICON.plus}</a></div></div>
+    <div class="frow">${fb('cat', libState.cat || '分類', !!libState.cat)}${fb('scen', libState.scen || '情境', !!libState.scen)}<button class="fbtn${libState.star ? ' on' : ''}" data-act="star">★ 重要</button>${fb('sort', '排序', libState.sort !== 'name')}</div>
+    ${sheet ? `<div class="chips sheet">${sheet}</div>` : ''}
+    ${tags.length ? `<div class="tags">${tags.map(([k, l]) => `<button class="tag" data-act="untag" data-val="${k}" aria-label="移除 ${esc(l)}">${esc(l)} ×</button>`).join('')}</div>` : ''}
     <div id="results">${libraryResults()}</div>`;
 }
-function clampScen() {
-  const box = $('#scenChips'); if (!box) return;
-  const more = box.querySelector('.more');
-  const chips = [...box.querySelectorAll('.chip:not(.more)')];
-  chips.forEach(c => c.hidden = false); more.hidden = true;
-  const tops = [...new Set(chips.map(c => c.offsetTop))].sort((a, b) => a - b);
-  if (tops.length <= 2) return;
-  more.hidden = false;
-  if (libState.scenOpen) { more.textContent = '收合'; return; }
-  more.textContent = '更多情境';
-  const limit = tops[1];
-  chips.forEach(c => { if (c.offsetTop > limit && !c.classList.contains('on')) c.hidden = true; });
-  for (let i = chips.length - 1; i > 0 && more.offsetTop > limit; i--) if (!chips[i].hidden && !chips[i].classList.contains('on')) chips[i].hidden = true;
-}
 function bindLibrary() {
-  clampScen();
   const q = $('#q'); let timer;
   q.addEventListener('input', () => {
     clearTimeout(timer);
@@ -530,6 +613,30 @@ function bindLibrary() {
   });
   q.addEventListener('keydown', e => { if (e.key === 'Enter') q.blur(); });
   $('#results').addEventListener('touchstart', () => q.blur(), { passive: true });
+}
+
+function relatedIds(c) {
+  const u = userOf(c.id); const set = new Set([...(c.related_card_ids || []), ...(u.links || [])]);
+  for (const x of USER.values()) if ((x.links || []).includes(c.id)) set.add(x.card_id);
+  for (const x of CARDS.values()) if ((x.related_card_ids || []).includes(c.id)) set.add(x.id);
+  set.delete(c.id);
+  return [...set].filter(id => CARDS.has(id) && isActive(id));
+}
+function relatedBox(c, u, open) {
+  const ids = relatedIds(c);
+  const list = ids.map(id => `<a class="rel" href="#/card/${encodeURIComponent(id)}?tab=digest">${esc(CARDS.get(id).title)}<span aria-hidden="true">›</span></a>`).join('');
+  let picker = '';
+  if (open) {
+    const fixed = new Set([...(c.related_card_ids || []), ...[...CARDS.values()].filter(x => (x.related_card_ids || []).includes(c.id)).map(x => x.id), ...[...USER.values()].filter(x => (x.links || []).includes(c.id)).map(x => x.card_id)]);
+    const mine = new Set(u.links || []);
+    const others = activeIds().filter(id => id !== c.id).map(id => CARDS.get(id)).sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
+    picker = `<div class="picker"><div class="lbl" style="font-size:14px;color:var(--muted);margin:6px 0">點選加入或移除關聯（灰色是卡片資料內建或由對方卡片連過來的）</div>
+      ${others.map(x => { const on = mine.has(x.id) || fixed.has(x.id), lock = fixed.has(x.id) && !mine.has(x.id);
+        return `<label class="ck${lock ? ' lock' : ''}"><input type="checkbox" data-link="${esc(x.id)}" ${on ? 'checked' : ''} ${lock ? 'disabled' : ''}> ${esc(x.title)}</label>`; }).join('')}
+      <div class="btn-row" style="margin-top:8px"><button class="btn solid" data-act="linksdone">完成</button></div></div>`;
+  }
+  return `<div class="box" id="relbox"><h4>關聯卡片</h4>${list || (open ? '' : '<p class="s" style="margin:4px 0">還沒有關聯卡片。</p>')}
+    ${open ? picker : `<button class="linkbtn" data-act="links">＋ 加入關聯卡片</button>`}</div>`;
 }
 
 /* ---------- views: card ---------- */
@@ -548,7 +655,8 @@ function renderCard(r) {
   return `<div class="card-head">
     <div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button>
       <h1 class="card-title">${esc(c.title)}</h1>
-      <button class="icon-btn" data-act="star" aria-label="${u.is_important ? '取消重要' : '標記為重要'}" aria-pressed="${u.is_important}">${ICON.star(u.is_important)}</button></div>
+      <button class="icon-btn" data-act="star" aria-label="${u.is_important ? '取消重要' : '標記為重要'}" aria-pressed="${u.is_important}">${ICON.star(u.is_important)}</button>
+      <button class="icon-btn" data-act="cardmenu" aria-label="更多">${ICON.more}</button></div>
     ${tab === 'image' ? '' : `<div class="card-one">${esc(c.one_liner)}</div>
     <button class="add-ref" data-act="addref">＋ 記錄一次實際體會</button>
     <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>`}
@@ -558,7 +666,7 @@ function renderCard(r) {
 function renderImageTab(c) {
   if (!c.image_url) return `<div class="empty">這張卡還沒有原圖。上傳後會壓縮存到 Cloudinary，看過一次之後離線也能看。<button class="btn solid" data-act="upload">上傳原圖</button></div>`;
   return `<button class="img-fit" id="imgFit" data-act="viewer" aria-label="放大查看原圖"><img id="cardImg" src="${esc(c.image_url)}" alt="${esc(c.title)} 原圖"></button>
-    <div class="img-foot"><span>點圖可放大</span><button class="copy" data-act="upload">更換原圖</button></div>`;
+    <div class="img-foot"><span>點圖可放大・更換原圖在右上角「⋮」</span></div>`;
 }
 function renderDigestTab(c, u, r) {
   const hitId = r.q.get('q') ? r.q.get('sec') : null;
@@ -573,19 +681,13 @@ function renderDigestTab(c, u, r) {
       <div class="src">${esc(src)}${src ? '・' : ''}${esc(natureText(s.nature))}</div>${ext}</section>`;
   }).join('');
   const prompts = (c.prompts || []).length ? `<div class="box"><h4>實用提問句</h4>${c.prompts.map((p, i) => `<div class="prompt"><span>${esc(p)}</span><button class="copy" data-act="copy" data-idx="${i}">複製</button></div>`).join('')}</div>` : '';
-  const rels = (c.related_card_ids || []).filter(id => CARDS.has(id) && isActive(id));
-  const related = rels.length ? `<div class="box"><h4>關聯卡片</h4>${rels.map(id => `<a class="rel" href="#/card/${encodeURIComponent(id)}">${esc(CARDS.get(id).title)}<span aria-hidden="true">›</span></a>`).join('')}</div>` : '';
+  const related = relatedBox(c, u, r.q.get('links') === '1');
   return `${banner}${c.core ? `<div class="core"><b>核心　</b>${esc(c.core)}</div>` : ''}
     <div class="jump" style="margin-top:12px">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
     <div class="sections">${secs}</div>${prompts}${related}
-    <div class="review">${reviewBtn(u)}</div>
+    <div class="review">${reviewBox(u)}</div>
     <div class="review" style="padding-top:6px"><a class="btn" href="#/practice?c=${encodeURIComponent(c.id)}">用這張卡練習教學</a></div>
     <div class="manage"><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button class="del" data-act="delcard">刪除這張卡</button></div>`;
-}
-function reviewBtn(u) {
-  return u.last_reviewed_at === today()
-    ? `<button class="btn solid" data-act="review" aria-pressed="true">${ICON.check('#fff')}已複習　今天・累積 ${u.review_count} 次</button>`
-    : `<button class="btn" data-act="review">${ICON.check('#0E4D45')}今天已複習</button>`;
 }
 function renderReflectTab(c, u, open) {
   const items = (u.reflections || []).slice().sort((a, b) => b.date.localeCompare(a.date));
@@ -609,7 +711,7 @@ function fitImage() {
   const box = $('#imgFit'); if (!box) return;
   const top = box.getBoundingClientRect().top + window.scrollY;
   const player = $('#player').offsetHeight || 72;
-  box.style.height = Math.max(240, window.innerHeight - top - player - 76) + 'px';
+  box.style.height = Math.max(240, (window.innerHeight - top - player - 76) / fontScale()) + 'px';
 }
 window.addEventListener('resize', fitImage);
 function afterCardRender(y) {
@@ -1017,23 +1119,52 @@ async function prStop() {
 
 /* ---------- import ---------- */
 let importState = { preview: null, done: [] };
+const SPEC_TEXT = `請依以下格式產出「為人處世知識庫」的卡片 JSON（陣列，可含多張卡）。只輸出 JSON，不要其他文字。
+
+必填欄位：
+- id：英數唯一碼，例 card_xxx
+- content_version：1（之後修改內容時 +1）
+- updated_at：YYYY-MM-DD
+- title：主題
+- one_liner：一句精華
+- category：只能是 ${CATEGORIES.join('、')} 之一
+- nature：陣列，只能用 ${NATURES.join('、')}
+- sources：來源陣列
+- tags、scenarios：陣列（scenarios 寫成遇到狀況時會搜尋的字，例「提拔幹部」）
+- core：一句核心
+- prompts：實用提問句陣列，沒有就空陣列
+- related_card_ids：關聯卡片 id 陣列，不知道就空陣列
+- image_url：空字串
+- sections：段落陣列，每段包含 id、chip（例「① 通」）、rule（段落名稱）、desc（精華內容）、keywords（陣列）、scenarios（陣列）、nature（陣列）、sources（陣列，與整卡不同時才填）、audio_script（口語化朗讀稿）、extended_card_id（null）
+
+規則：內容只取自原圖，不加入原圖沒有的觀點；整卡有多個來源時，每段都要填 sources。
+
+範例：
+{"id":"card_example","content_version":1,"updated_at":"2026-10-08","title":"範例主題","one_liner":"一句精華","category":"做人處世","nature":["個人整理"],"sources":["來源"],"tags":["標籤"],"scenarios":["情境"],"core":"一句核心","prompts":[],"related_card_ids":[],"image_url":"","sections":[{"id":"sec_1","chip":"① 重點","rule":"段落名稱","desc":"精華內容","keywords":["關鍵字"],"scenarios":["情境"],"nature":["個人整理"],"sources":[],"audio_script":"朗讀稿","extended_card_id":null}]}`;
 function renderImport() {
-  const hasCloud = localStorage.getItem('cloudinary_name') && localStorage.getItem('cloudinary_preset');
   let prev = '';
   if (importState.preview) {
     const p = importState.preview;
-    prev = `<div class="panel"><h3>檢查結果</h3>${p.errors.length ? `<div class="err">${p.errors.map(esc).join('<br>')}</div>` : ''}
-      ${p.items.map((it, i) => `<label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><div><b>${esc(it.card.title)}</b></div><div class="st">${esc(it.card.category)}・${it.card.sections.length} 段${it.card._image_data ? '・含原圖' : ''}</div>
-        <div class="st ${it.older ? 'warn' : ''}">${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${it.card.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${it.card.content_version}），★、複習與體會保留${it.hasImg ? '，保留原圖' : ''}`}</div></div></label>`).join('')}
+    const ok = (good, text) => `<div class="chk ${good ? 'g' : 'w'}">${good ? '✓' : '!'} ${text}</div>`;
+    prev = `<div class="panel"><h3>檢查結果</h3>
+      ${p.errors.length ? `<div class="err">${p.errors.map(esc).join('<br>')}</div><p>請把這個 JSON 交給 Claude 依規格修正，或複製格式說明，貼給產出它的 AI 重新產出。</p><button class="btn" data-act="copyspec">複製格式說明</button>` : ''}
+      ${p.items.map((it, i) => { const c = it.card, ns = c.sections.length, na = c.sections.filter(s => s.audio_script).length, nr = (c.related_card_ids || []).length;
+        return `<div class="prevcard"><label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><b>${esc(c.title)}</b><div class="st ${it.older ? 'warn' : ''}">${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${c.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${c.content_version}），★、複習、體會與關聯都保留`}</div></div></label>
+          ${ok(true, '分類：' + esc(c.category))}${ok(true, `段落：${ns} 段`)}${ok(na === ns, `朗讀稿：${na}／${ns} 段`)}
+          ${ok(!!c._image_data || it.hasImg, c._image_data ? '原圖：含原圖，匯入時自動上傳' : it.hasImg ? '原圖：保留現有原圖' : '原圖：未含原圖，匯入後可上傳')}
+          ${ok(nr > 0, nr ? `關聯卡片：${nr} 張` : '關聯卡片：尚未設定，匯入後可在卡片頁加入')}</div>`; }).join('')}
       ${p.items.length ? `<div class="btn-row"><button class="btn solid" data-act="doimport">確認匯入</button><button class="btn" data-act="cancelimport">取消</button></div>` : ''}</div>`;
   }
-  const done = importState.done.length ? `<div class="panel"><h3>已匯入的卡片</h3>${hasCloud ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
+  const done = importState.done.length ? `<div class="panel"><h3>已匯入的卡片</h3>${hasCloud() ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
       ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="done-row"><div class="name"><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
         <div class="acts"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
-  return `<h1 class="page-title">匯入知識卡</h1><div class="page-sub">貼上 Claude 產出的卡片資料，或選擇 .json 檔。完整備份請到「設定」還原。</div>
-    <div class="panel"><textarea id="jsonIn" placeholder="在這裡貼上卡片 JSON" aria-label="卡片 JSON"></textarea>
-      <div class="btn-row"><button class="btn solid" data-act="checkjson">檢查資料</button><button class="btn" data-act="pickjson">選擇檔案</button></div></div>${prev}${done}`;
+  return `<div class="card-head"><div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button><h1 class="card-title">新增知識卡</h1></div></div>
+    <div class="page-sub" style="padding-top:6px">把圖交給 Claude 產出卡片資料，複製後按「讀取剪貼簿」，或選擇下載的 .json 檔。完整備份請到「設定」還原。</div>
+    <div class="panel"><div class="btn-row"><button class="btn solid" data-act="clipjson">讀取剪貼簿</button><button class="btn" data-act="pickjson">選擇檔案</button></div>
+      <details><summary>進階：手動貼上 JSON</summary><textarea id="jsonIn" placeholder="在這裡貼上卡片 JSON" aria-label="卡片 JSON"></textarea><div class="btn-row" style="margin-top:8px"><button class="btn" data-act="checkjson">檢查資料</button></div></details>
+      <button class="linkbtn" data-act="copyspec">複製格式說明（貼給其他 AI，產出正確格式）</button></div>${prev}${done}`;
 }
+
 function normalizeCard(raw, errors) {
   const where = raw && raw.title ? `「${raw.title}」` : `卡片 ${raw && raw.id ? raw.id : ''}`;
   const bad = m => { errors.push(where + '：' + m); return null; };
@@ -1110,6 +1241,7 @@ async function renderSettings() {
       <div class="kv"><span>上次備份</span><b>${d === null ? '尚未備份' : d === 0 ? '今天' : d + ' 天前'}</b></div>
       <p>備份檔包含所有卡片、★、複習紀錄、體會與教學紀錄。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
       <div class="btn-row"><button class="btn solid" data-act="backup">匯出完整備份</button><button class="btn danger" data-act="restore">從備份還原</button></div></div>
+    <div class="panel"><h3>字級</h3><div class="chips" style="padding:0">${[['1', '標準'], ['1.12', '大'], ['1.25', '特大']].map(([v, l]) => `<button class="chip${String(fontScale()) === v ? ' on' : ''}" data-act="fontscale" data-val="${v}">${l}</button>`).join('')}</div></div>
     <div class="panel"><h3>關於</h3>
       <div class="kv"><span>卡片數</span><b>${activeIds().length} 張${CARDS.size > activeIds().length ? `（另有封存 ${CARDS.size - activeIds().length} 張）` : ''}</b></div>
       <div class="kv"><span>永久儲存</span><b>${persisted === null ? '無法確認' : persisted ? '已啟用' : '未啟用'}</b></div>
@@ -1178,13 +1310,31 @@ document.addEventListener('click', async e => {
       const saved = await getMeta('home_today'); if (saved && saved.ids) { saved.ids = saved.ids.filter(x => x !== id); await setMeta('home_today', saved); }
       ttsStop(); toast('已刪除'); location.hash = '#/library'; break;
     }
+    case 'rv': { const u = userOf(c.id); reviewAs(u, el.dataset.val); await saveUser(u); $('#rvbox').outerHTML = reviewBox(u); toast(`${LEVELS[el.dataset.val]}・下次 ${md(u.next_review_at)}`); break; }
+    case 'sheet': libState.sheet = libState.sheet === el.dataset.val ? null : el.dataset.val; render(true); break;
+    case 'setcat': libState.cat = el.dataset.val; libState.sheet = null; render(true); break;
+    case 'setscen': libState.scen = el.dataset.val; libState.sheet = null; render(true); break;
+    case 'setsort': libState.sort = el.dataset.val; libState.sheet = null; render(true); break;
+    case 'untag': { const k = el.dataset.val; if (k === 'cat') libState.cat = ''; else if (k === 'scen') libState.scen = ''; else if (k === 'star') libState.star = false; else if (k === 'arch') libState.archive = false; else if (k === 'sort') libState.sort = 'name'; render(true); break; }
+    case 'morerecent': Object.assign(libState, { q: '', cat: '', scen: '', star: false, archive: false, sort: 'recent', sheet: null }); go('#/library'); break;
+    case 'links': { const p = params(); p.tab = 'digest'; p.links = '1'; delete p.sec; delete p.q; history.replaceState(null, '', cardHash(c.id, p)); render(false); setTimeout(() => { const b = $('#relbox'); if (b) b.scrollIntoView({ block: 'start' }); }, 80); break; }
+    case 'linksdone': { const p = params(); delete p.links; history.replaceState(null, '', cardHash(c.id, p)); render(true); break; }
+    case 'cardmenu': {
+      const u = userOf(c.id); const m = document.createElement('div'); m.className = 'menu top';
+      m.innerHTML = `<button data-act="upload">${c.image_url ? '更換原圖' : '上傳原圖'}</button><button data-act="links">加入關聯卡片</button><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button data-act="delcard" style="color:var(--danger)">刪除這張卡</button>`;
+      document.body.appendChild(m); m.addEventListener('click', () => setTimeout(closeMenu, 0)); break;
+    }
+    case 'clipjson': {
+      let t = ''; try { t = await navigator.clipboard.readText(); } catch (err) { toast('無法讀取剪貼簿，請在 Chrome 允許，或改用「選擇檔案」'); return; }
+      if (!t.trim()) { toast('剪貼簿是空的。請先在 Claude 複製卡片資料'); return; }
+      checkJson(t.trim()); render(true); break;
+    }
+    case 'copyspec': try { await navigator.clipboard.writeText(SPEC_TEXT); toast('已複製格式說明'); } catch (err) { toast('無法自動複製'); } break;
+    case 'fontscale': localStorage.setItem('font_scale', el.dataset.val); applyFontScale(); render(true); break;
     case 'swap': await todayPicks(true); render(true); toast('已換一批'); break;
     case 'random': { const ids = activeIds(); if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
     case 'clearq': libState.q = ''; $('#q').value = ''; $('#results').innerHTML = libraryResults(); el.style.visibility = 'hidden'; $('#q').focus(); break;
-    case 'cat': libState.cat = el.dataset.val; render(true); break;
     case 'star': if (c) { const u = userOf(c.id); u.is_important = !u.is_important; await saveUser(u); render(true); } else { libState.star = !libState.star; if (libState.star) libState.archive = false; render(true); } break;
-    case 'scen': libState.scen = el.dataset.val; render(true); break;
-    case 'scenmore': libState.scenOpen = !libState.scenOpen; clampScen(); break;
     case 'back': if (history.length > 1) history.back(); else go('#/home'); break;
     case 'tab': { const p = params(); p.tab = el.dataset.val; delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
     case 'addref': { const p = params(); p.tab = 'reflect'; p.form = '1'; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
@@ -1197,11 +1347,6 @@ document.addEventListener('click', async e => {
       await saveUser(u); const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存體會'); render(false); break;
     }
     case 'delref': { if (!confirm('刪除這筆體會？')) return; const u = userOf(c.id); u.reflections = u.reflections.filter(r => r.id !== el.dataset.id); await saveUser(u); render(true); break; }
-    case 'review': {
-      const u = userOf(c.id); const t = today();
-      if (u.last_reviewed_at !== t) { u.review_count += 1; u.last_reviewed_at = t; await saveUser(u); }
-      el.outerHTML = reviewBtn(u); break;
-    }
     case 'jump': { const s = document.getElementById('sec-' + el.dataset.id); if (s) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); const i = Number(s && s.dataset.idx); if (!tts.playing && !isNaN(i)) { tts.idx = i; updatePlayer(); } break; }
     case 'playsec': { const i = Number(el.dataset.idx); if (tts.playing && tts.idx === i && tts.mode === 'single') ttsStop(); else { tts.mode = 'single'; speakIdx(i); } break; }
     case 'copy': { const txt = c.prompts[Number(el.dataset.idx)]; try { await navigator.clipboard.writeText(txt); toast('已複製'); } catch (err) { toast('無法複製，請長按文字選取'); } break; }
@@ -1222,11 +1367,19 @@ document.addEventListener('click', async e => {
   }
 });
 
+document.addEventListener('change', async e => {
+  const cb = e.target.closest('input[data-link]'); if (!cb || !route || route.name !== 'card') return;
+  const u = userOf(route.id); const set = new Set(u.links || []);
+  if (cb.checked) set.add(cb.dataset.link); else set.delete(cb.dataset.link);
+  u.links = [...set]; await saveUser(u);
+});
+function fontScale() { return Number(localStorage.getItem('font_scale')) || 1; }
+function applyFontScale() { $('#view').style.zoom = fontScale(); }
 /* ---------- boot ---------- */
 (async () => {
   db = await openDB();
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
-  await loadAll(); await loadTeach();
+  await loadAll(); await loadTeach(); applyFontScale();
   if (!location.hash) history.replaceState(null, '', '#/home');
   render(false);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
