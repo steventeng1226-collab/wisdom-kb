@@ -201,6 +201,9 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 details summary{min-height:44px;display:flex;align-items:center;font-size:16px;color:var(--ink2);cursor:pointer}
 .menu.top{top:calc(56px + env(safe-area-inset-top,0px));bottom:auto}
 .thumb{width:60px;height:80px}
+.pr-ex{color:var(--ink);background:#E2F0EC;border-radius:6px;padding:4px 8px;margin-top:4px;line-height:1.65}
+.ins{margin:4px 0;font-size:18px;line-height:1.7;font-family:var(--serif);color:var(--accent)}
+.ins-in{width:100%;min-height:90px;border:1.5px solid var(--line2);border-radius:10px;padding:10px 12px;font-size:17px;line-height:1.6}
 /* tabbar */
 #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:var(--safe-b)}
 #tabbar.hide{display:none}
@@ -253,7 +256,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -410,7 +413,7 @@ function reviewBox(u) {
 }
 
 /* ---------- search ---------- */
-function cardFields(c) { return [c.title, c.one_liner, c.core, c.category, ...(c.tags||[]), ...(c.scenarios||[]), ...(c.sources||[])].join('\n'); }
+function cardFields(c) { const u = USER.get(c.id) || {}; return [c.title, c.one_liner, c.core, c.category, ...(c.tags||[]), ...(c.scenarios||[]), ...(c.sources||[]), u.insight || '', ...(u.reflections || []).map(r => [r.occasion, r.how_applied, r.result].join(' '))].join('\n'); }
 function secFields(s) { return [s.rule, s.desc, s.chip, ...(s.keywords||[]), ...(s.scenarios||[])].join('\n'); }
 function containsAny(token, words) { return (words||[]).filter(w => w && w.length >= 2 && token.includes(w)); }
 function search(q) {
@@ -649,7 +652,7 @@ function renderCard(r) {
   const tabBtn = (k, label) => `<button class="${tab === k ? 'on' : ''}" data-act="tab" data-val="${k}" aria-pressed="${tab === k}">${label}</button>`;
   let body = '';
   if (tab === 'image') body = renderImageTab(c);
-  else if (tab === 'reflect') body = renderReflectTab(c, u, r.q.get('form') === '1');
+  else if (tab === 'reflect') body = renderReflectTab(c, u, r.q.get('form') === '1', r.q.get('ins') === '1', r.q.get('links') === '1');
   else body = renderDigestTab(c, u, r);
   const archBanner = u.archived ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px">這張卡已封存，不會出現在首頁和搜尋。<button class="copy" data-act="unarchive">恢復</button></div>` : '';
   return `<div class="card-head">
@@ -658,9 +661,9 @@ function renderCard(r) {
       <button class="icon-btn" data-act="star" aria-label="${u.is_important ? '取消重要' : '標記為重要'}" aria-pressed="${u.is_important}">${ICON.star(u.is_important)}</button>
       <button class="icon-btn" data-act="cardmenu" aria-label="更多">${ICON.more}</button></div>
     ${tab === 'image' ? '' : `<div class="card-one">${esc(c.one_liner)}</div>
-    <button class="add-ref" data-act="addref">＋ 記錄一次實際體會</button>
+    <button class="add-ref" data-act="addref">＋ 記錄一次連結</button>
     <div class="card-meta"><span class="pill">${esc(c.category)}</span><span class="pill out">${esc(natureText(c.nature))}</span><span>${esc((c.tags||[]).join('｜'))}</span></div>`}
-    <div class="tabs" role="tablist">${tabBtn('image','圖卡')}${tabBtn('digest','精華')}${tabBtn('reflect','體會')}</div>
+    <div class="tabs" role="tablist">${tabBtn('image','圖卡')}${tabBtn('digest','精華')}${tabBtn('reflect','我的連結')}</div>
   </div>${archBanner}${body}`;
 }
 function renderImageTab(c) {
@@ -689,23 +692,29 @@ function renderDigestTab(c, u, r) {
     <div class="review" style="padding-top:6px"><a class="btn" href="#/practice?c=${encodeURIComponent(c.id)}">用這張卡練習教學</a></div>
     <div class="manage"><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button class="del" data-act="delcard">刪除這張卡</button></div>`;
 }
-function renderReflectTab(c, u, open) {
+const REF_KINDS = { thought: '想到的事', applied: '實際運用' };
+function renderReflectTab(c, u, open, editIns, linksOpen) {
   const items = (u.reflections || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const ins = editIns
+    ? `<div class="box"><h4>這張卡提醒我什麼</h4><textarea id="insIn" class="ins-in" placeholder="用一兩句自己的話寫下來">${esc(u.insight || '')}</textarea>
+        <div class="btn-row" style="margin-top:8px"><button class="btn solid" data-act="saveins">儲存</button><button class="btn" data-act="cancelins">取消</button></div></div>`
+    : `<div class="box"><h4>這張卡提醒我什麼</h4>${u.insight ? `<p class="ins">${esc(u.insight)}</p>` : '<p class="s" style="margin:4px 0">還沒寫。用自己的話寫一兩句，最能變成自己的東西。</p>'}<button class="linkbtn" data-act="editins">${u.insight ? '修改' : '＋ 寫下來'}</button></div>`;
   const form = open ? `<div class="form" id="refForm">
+      <div class="field"><label>類型</label><div class="chips" style="padding:0">${Object.entries(REF_KINDS).map(([k, l], i) => `<label class="chip ckchip"><input type="radio" name="rKind" value="${k}" ${i === 0 ? 'checked' : ''}> ${l}</label>`).join('')}</div></div>
       <div class="field"><label for="rDate">日期</label><input id="rDate" type="date" value="${today()}"></div>
-      <div class="field"><label for="rOcc">哪次用到</label><input id="rOcc" placeholder="例：主管晉升討論"></div>
-      <div class="field"><label for="rHow">怎麼用</label><textarea id="rHow" placeholder="例：觀察候選人過去提拔過哪些人"></textarea></div>
+      <div class="field"><label for="rOcc">哪件工作或生活的事</label><input id="rOcc" placeholder="例：主管晉升討論、WK37 重複異常檢討"></div>
+      <div class="field"><label for="rHow">想到什麼／怎麼用</label><textarea id="rHow" placeholder="例：先追為什麼再發，而不是先問對策"></textarea></div>
       <div class="field"><label for="rRes">結果／體會</label><textarea id="rRes"></textarea></div>
-      <div class="err" id="rErr" hidden>請至少填寫「哪次用到」。</div>
-      <div class="btn-row"><button class="btn solid" data-act="saveref">儲存體會</button><button class="btn" data-act="cancelref">取消</button></div></div>`
-    : `<div class="wrap" style="margin-top:14px"><button class="btn solid" data-act="addref">＋ 新增體會</button></div>`;
+      <div class="err" id="rErr" hidden>請至少填寫「哪件工作或生活的事」。</div>
+      <div class="btn-row"><button class="btn solid" data-act="saveref">儲存</button><button class="btn" data-act="cancelref">取消</button></div></div>`
+    : `<div class="wrap" style="margin-top:14px"><button class="btn solid" data-act="addref">＋ 記錄一次連結</button></div>`;
   const tl = items.length ? `<div class="timeline">${items.map(it => `<div class="tl-item">
-      <div class="when">${esc(it.date.replaceAll('-','/'))}｜<span>${esc(it.occasion)}</span></div>
-      ${it.how_applied ? `<div class="lbl">怎麼用</div><p>${esc(it.how_applied)}</p>` : ''}
+      <div class="when">${esc(it.date.replaceAll('-', '/'))}｜<span class="kb">${REF_KINDS[it.kind || 'applied']}</span> <span>${esc(it.occasion)}</span></div>
+      ${it.how_applied ? `<div class="lbl">想到什麼／怎麼用</div><p>${esc(it.how_applied)}</p>` : ''}
       ${it.result ? `<div class="lbl">結果／體會</div><p>${esc(it.result)}</p>` : ''}
       <button class="tl-del" data-act="delref" data-id="${esc(it.id)}">刪除這筆</button></div>`).join('')}</div>`
-    : (open ? '' : `<div class="empty">還沒有體會。下次在工作或生活中用到這張卡，記一筆：哪次用到、怎麼用、結果如何。</div>`);
-  return form + tl;
+    : (open ? '' : `<div class="empty">還沒有紀錄。這張卡讓你想到哪件事、或在哪裡實際用過，都記一筆。半年後回來看，這裡會是最有價值的部分。</div>`);
+  return ins + form + tl + relatedBox(c, u, linksOpen);
 }
 function fitImage() {
   const box = $('#imgFit'); if (!box) return;
@@ -957,7 +966,7 @@ function renderMethod(id) {
     <h2 class="sec-title">流程圖<span class="hint">　點一格可朗讀這一步</span></h2>
     <div class="flow">${m.steps.map((st, i) => `${i ? '<div class="arrow" aria-hidden="true">↓</div>' : ''}<button class="node" id="node-${i}" data-act="playsec" data-idx="${i}"><span class="nn">${i + 1}</span><span class="nt"><b>${esc(st.t)}</b><span>${esc(st.d)}</span></span></button>`).join('')}</div>
     <div class="box"><h4>適用內容</h4><p style="margin:0 0 6px">${esc(m.suits)}</p>
-      ${cards.length ? `<div class="lbl" style="font-size:14px;color:var(--muted)">知識庫中適合的卡（點選開始練習）</div>${cards.map(c => `<a class="rel" href="#/practice?m=${m.id}&c=${encodeURIComponent(c.id)}">${esc(c.title)}<span aria-hidden="true">›</span></a>`).join('')}` : '<p class="s">知識庫裡還沒有適合的卡。</p>'}</div>
+      ${cards.length ? `<div class="lbl" style="font-size:14px;color:var(--muted)">知識庫中適合的卡（點選開始練習）</div>${cards.slice().sort((a, b) => hasTeach(b, m.id) - hasTeach(a, m.id)).map(c => `<a class="rel" href="#/practice?m=${m.id}&c=${encodeURIComponent(c.id)}"><span>${esc(c.title)}${hasTeach(c, m.id) ? ' <span class="kb">有範例</span>' : ''}</span><span aria-hidden="true">›</span></a>`).join('')}` : '<p class="s">知識庫裡還沒有適合的卡。</p>'}</div>
     <div class="box"><h4>常見錯誤</h4>${m.mistakes.map(x => `<p style="margin:4px 0">・${esc(x)}</p>`).join('')}</div>
     <div class="src" style="margin:10px 16px 0;font-size:14px;color:var(--muted)">出處：${esc(m.source)}・個人整理</div>
     <div class="review" style="gap:10px;flex-wrap:wrap">
@@ -1034,7 +1043,7 @@ function renderPractice(mid, cid) {
   const head = (t) => `<div class="card-head"><div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button><h1 class="card-title">${t}</h1></div></div>`;
   if (!m) {
     return head('選擇教學方法') + `${c ? `<div class="page-sub" style="padding-top:8px">卡片：${esc(c.title)}</div>` : ''}
-      ${METHODS.map((x, i) => `<a class="mrow" href="#/practice?m=${x.id}${c ? '&c=' + encodeURIComponent(c.id) : ''}"><span class="mnum">${i + 1}</span><div style="flex:1;min-width:0"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.suits)}</div></div></a>`).join('')}`;
+      ${METHODS.map((x, i) => `<a class="mrow" href="#/practice?m=${x.id}${c ? '&c=' + encodeURIComponent(c.id) : ''}"><span class="mnum">${i + 1}</span><div style="flex:1;min-width:0"><div class="t">${esc(x.name)}${c && hasTeach(c, x.id) ? ' <span class="kb">有範例</span>' : ''}</div><div class="s">${esc(x.suits)}</div></div></a>`).join('')}`;
   }
   if (!c) {
     const fit = suitableCards(m), others = [...CARDS.values()].filter(x => isActive(x.id) && !fit.includes(x));
@@ -1046,7 +1055,8 @@ function renderPractice(mid, cid) {
   const over = PR.elapsed > PR.target;
   const timeTxt = PR.running || PR.done ? (over ? '+' + fmtTime(PR.elapsed - PR.target) : fmtTime(PR.target - PR.elapsed)) : fmtTime(PR.target);
   return head('練習教學') + `<div class="page-sub" style="padding-top:8px"><b>${esc(m.name)}</b> × <a href="#/card/${encodeURIComponent(c.id)}?tab=digest">${esc(c.title)}</a></div>
-    <div class="flow">${m.steps.map((st, i) => `${i ? '<div class="arrow" aria-hidden="true">↓</div>' : ''}<div class="node static"><span class="nn">${i + 1}</span><span class="nt"><b>${esc(st.t)}</b><span class="pr-hint">${esc(st.h(c))}</span></span></div>`).join('')}</div>
+    ${hasTeach(c, m.id) ? '<div class="banner" style="margin-top:0;margin-bottom:12px">這張卡有預先寫好的教學範例。先照著講一次，再換成自己的話和自己的例子。</div>' : ''}
+    <div class="flow">${m.steps.map((st, i) => `${i ? '<div class="arrow" aria-hidden="true">↓</div>' : ''}<div class="node static"><span class="nn">${i + 1}</span><span class="nt"><b>${esc(st.t)}</b>${hasTeach(c, m.id) && c.teaching[m.id][i] ? `<span class="pr-ex">${esc(c.teaching[m.id][i])}</span>` : `<span class="pr-hint">${esc(st.h(c))}</span>`}</span></div>`).join('')}</div>
     <div class="panel" style="align-items:center;text-align:center">
       <div class="chips" style="padding:0;justify-content:center">${[60, 180, 300].map(t => `<button class="chip${PR.target === t ? ' on' : ''}" data-act="settime" data-val="${t}" ${PR.running ? 'disabled' : ''}>${t / 60} 分鐘</button>`).join('')}</div>
       <div id="prTime" class="pr-time${over ? ' over' : ''}">${timeTxt}</div>
@@ -1135,6 +1145,12 @@ const SPEC_TEXT = `請依以下格式產出「為人處世知識庫」的卡片 
 - prompts：實用提問句陣列，沒有就空陣列
 - related_card_ids：關聯卡片 id 陣列，不知道就空陣列
 - image_url：空字串
+- teaching（選填）：預先寫好的教學範例，物件，鍵是教學方法代碼，值是字串陣列，依該方法的步驟順序，每步一句。可用的方法與步驟：
+  prep：結論、原因、舉例、再講結論
+  ask：拋出問題、聽對方想法、追問、引出觀念、確認理解
+  feynman：選一個觀念、用白話講、找出卡住處、重讀再簡化
+  case：選案例、描述事實、套用卡片、討論做法、歸納原則
+  舉例只能寫成「假設／例如」的情境，不可捏造真實發生的事件
 - sections：段落陣列，每段包含 id、chip（例「① 通」）、rule（段落名稱）、desc（精華內容）、keywords（陣列）、scenarios（陣列）、nature（陣列）、sources（陣列，與整卡不同時才填）、audio_script（口語化朗讀稿）、extended_card_id（null）
 
 規則：內容只取自原圖，不加入原圖沒有的觀點；整卡有多個來源時，每段都要填 sources。
@@ -1165,6 +1181,13 @@ function renderImport() {
       <button class="linkbtn" data-act="copyspec">複製格式說明（貼給其他 AI，產出正確格式）</button></div>${prev}${done}`;
 }
 
+function normTeaching(t) {
+  if (!t || typeof t !== 'object' || Array.isArray(t)) return {};
+  const out = {};
+  for (const [k, v] of Object.entries(t)) if (METHOD_MAP[k] && Array.isArray(v)) out[k] = v.map(x => String(x || '').trim()).slice(0, METHOD_MAP[k].steps.length);
+  return out;
+}
+const hasTeach = (c, mid) => !!(c.teaching && c.teaching[mid] && c.teaching[mid].some(Boolean));
 function normalizeCard(raw, errors) {
   const where = raw && raw.title ? `「${raw.title}」` : `卡片 ${raw && raw.id ? raw.id : ''}`;
   const bad = m => { errors.push(where + '：' + m); return null; };
@@ -1185,7 +1208,7 @@ function normalizeCard(raw, errors) {
     if (sb.length) return bad(`第 ${i + 1} 段內容性質「${sb.join('、')}」不是合法值`);
     sections.push({ id: s.id, chip: s.chip || `${i + 1} ${s.rule.slice(0, 2)}`, rule: s.rule, desc: s.desc, keywords: arr(s.keywords), scenarios: arr(s.scenarios), nature: sn.length ? sn : nat, sources: arr(s.sources), audio_script: s.audio_script || '', extended_card_id: s.extended_card_id || null });
   }
-  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '', _image_data: typeof raw.image_data === 'string' && raw.image_data.startsWith('data:image/') ? raw.image_data : null };
+  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '', teaching: normTeaching(raw.teaching), _image_data: typeof raw.image_data === 'string' && raw.image_data.startsWith('data:image/') ? raw.image_data : null };
 }
 const IMG_MSG = '這是圖片檔。請先把圖交給 Claude 產出卡片資料，匯入後再上傳原圖。';
 function isImageFile(f) { return /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|heic|heif)$/i.test(f.name); }
@@ -1317,7 +1340,7 @@ document.addEventListener('click', async e => {
     case 'setsort': libState.sort = el.dataset.val; libState.sheet = null; render(true); break;
     case 'untag': { const k = el.dataset.val; if (k === 'cat') libState.cat = ''; else if (k === 'scen') libState.scen = ''; else if (k === 'star') libState.star = false; else if (k === 'arch') libState.archive = false; else if (k === 'sort') libState.sort = 'name'; render(true); break; }
     case 'morerecent': Object.assign(libState, { q: '', cat: '', scen: '', star: false, archive: false, sort: 'recent', sheet: null }); go('#/library'); break;
-    case 'links': { const p = params(); p.tab = 'digest'; p.links = '1'; delete p.sec; delete p.q; history.replaceState(null, '', cardHash(c.id, p)); render(false); setTimeout(() => { const b = $('#relbox'); if (b) b.scrollIntoView({ block: 'start' }); }, 80); break; }
+    case 'links': { const p = params(); if (p.tab !== 'reflect') p.tab = 'digest'; p.links = '1'; delete p.sec; delete p.q; history.replaceState(null, '', cardHash(c.id, p)); render(false); setTimeout(() => { const b = $('#relbox'); if (b) b.scrollIntoView({ block: 'start' }); }, 80); break; }
     case 'linksdone': { const p = params(); delete p.links; history.replaceState(null, '', cardHash(c.id, p)); render(true); break; }
     case 'cardmenu': {
       const u = userOf(c.id); const m = document.createElement('div'); m.className = 'menu top';
@@ -1338,13 +1361,16 @@ document.addEventListener('click', async e => {
     case 'back': if (history.length > 1) history.back(); else go('#/home'); break;
     case 'tab': { const p = params(); p.tab = el.dataset.val; delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
     case 'addref': { const p = params(); p.tab = 'reflect'; p.form = '1'; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
+    case 'editins': { const p = params(); p.tab = 'reflect'; p.ins = '1'; history.replaceState(null, '', cardHash(c.id, p)); render(true); setTimeout(() => { const t = $('#insIn'); if (t) t.focus(); }, 60); break; }
+    case 'cancelins': { const p = params(); delete p.ins; history.replaceState(null, '', cardHash(c.id, p)); render(true); break; }
+    case 'saveins': { const u = userOf(c.id); u.insight = $('#insIn').value.trim(); await saveUser(u); const p = params(); delete p.ins; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存'); render(true); break; }
     case 'cancelref': { const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); render(false); break; }
     case 'saveref': {
       const occ = $('#rOcc').value.trim();
       if (!occ) { $('#rErr').hidden = false; $('#rOcc').focus(); return; }
       const u = userOf(c.id);
-      u.reflections = [...(u.reflections || []), { id: 'r' + Date.now(), date: $('#rDate').value || today(), occasion: occ, how_applied: $('#rHow').value.trim(), result: $('#rRes').value.trim() }];
-      await saveUser(u); const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存體會'); render(false); break;
+      u.reflections = [...(u.reflections || []), { id: 'r' + Date.now(), kind: (document.querySelector('input[name=rKind]:checked') || {}).value || 'thought', date: $('#rDate').value || today(), occasion: occ, how_applied: $('#rHow').value.trim(), result: $('#rRes').value.trim() }];
+      await saveUser(u); const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存'); render(false); break;
     }
     case 'delref': { if (!confirm('刪除這筆體會？')) return; const u = userOf(c.id); u.reflections = u.reflections.filter(r => r.id !== el.dataset.id); await saveUser(u); render(true); break; }
     case 'jump': { const s = document.getElementById('sec-' + el.dataset.id); if (s) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); const i = Number(s && s.dataset.idx); if (!tts.playing && !isNaN(i)) { tts.idx = i; updatePlayer(); } break; }
