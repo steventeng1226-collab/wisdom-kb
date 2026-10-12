@@ -89,8 +89,13 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .jump{position:sticky;top:0;z-index:4;background:var(--bg);padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;border-bottom:1px solid #E6E0D4}
 .jump button{height:44px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px;font-weight:500;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jump button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.jump button.cur:not(.on){border:2px solid var(--accent);color:var(--accent);font-weight:700}
+.jump.compact{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 16px}
+.jump.compact::-webkit-scrollbar{display:none}
+.jump.compact button{flex:none;min-width:66px;padding:0 10px}
+.jump-sent{height:1px;margin-top:11px}
 .sections{padding:14px 16px 0;display:flex;flex-direction:column;gap:14px}
-.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:130px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:0}
 .sec.hit{background:var(--hit);border:2.5px solid var(--hit-line)}
 .sec.playing{box-shadow:0 0 0 3px var(--accent) inset}
 .sec-h{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -256,7 +261,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.2';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -497,7 +502,7 @@ function parseHash() {
   const parts = path.split('/');
   return { name: parts[0], id: parts[1] ? decodeURIComponent(parts[1]) : null, q: new URLSearchParams(qs || '') };
 }
-let route = null; let libState = { q: '', cat: '', scen: '', star: false, archive: false, sort: 'name', sheet: null };
+let route = null; let libState = { q: '', cat: '', scen: '', star: false, archive: false, sort: (() => { try { return localStorage.getItem('lib_sort') || 'recent'; } catch (e) { return 'recent'; } })(), sheet: null };
 async function render(keepScroll) {
   const prev = route; route = parseHash();
   const pk = r => r && (r.name === 'card' || r.name === 'method') ? r.name + ':' + r.id : null;
@@ -557,11 +562,12 @@ async function renderHome() {
 }
 
 /* ---------- views: library ---------- */
+function addedText(id) { const t = userOf(id).created_at; if (!t) return ''; const d = new Date(t); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()} 加入・`; }
 function reviewedText(id) { const d = daysSince(userOf(id).last_reviewed_at); return d === null ? '尚未複習' : d === 0 ? '今天複習' : `${d} 天前複習`; }
 const SORTS = { name: '名稱', recent: '最近新增', stale: '最久沒複習', next: '下次複習日' };
 function sortCards(arr) {
   const s = libState.sort, U = c => userOf(c.id);
-  if (s === 'recent') return arr.sort((a, b) => (U(b).created_at || '').localeCompare(U(a).created_at || ''));
+  if (s === 'recent') return arr.sort((a, b) => (U(b).created_at || '').localeCompare(U(a).created_at || '') || a.title.localeCompare(b.title, 'zh-Hant'));
   if (s === 'stale') return arr.sort((a, b) => (U(a).last_reviewed_at || '').localeCompare(U(b).last_reviewed_at || ''));
   if (s === 'next') return arr.sort((a, b) => (U(a).next_review_at || '').localeCompare(U(b).next_review_at || ''));
   return arr.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
@@ -584,7 +590,7 @@ function libraryResults() {
     return `<a class="result" href="#/card/${encodeURIComponent(c.id)}?${qp}">${th}<div style="min-width:0;flex:1">
       ${userOf(c.id).is_important ? '<span class="star-mark" aria-label="重要">★</span>' : ''}<div class="t" style="padding-right:22px">${r.terms.length ? highlight(c.title, r.terms) : esc(c.title)}</div>
       <div class="o">${r.terms.length ? highlight(c.one_liner, r.terms) : esc(c.one_liner)}</div>${hit}
-      <div class="d">${esc(c.category)}・${homeReviewText(c.id)}</div></div></a>`;
+      <div class="d">${esc(c.category)}・${addedText(c.id)}${homeReviewText(c.id)}</div></div></a>`;
   }).join('') + archLink;
 }
 function renderLibrary() {
@@ -600,10 +606,10 @@ function renderLibrary() {
   if (libState.scen) tags.push(['scen', libState.scen]);
   if (libState.star) tags.push(['star', '★ 重要']);
   if (libState.archive) tags.push(['arch', '封存區']);
-  if (libState.sort !== 'name') tags.push(['sort', '排序：' + SORTS[libState.sort]]);
+  if (libState.sort !== 'recent') tags.push(['sort', '排序：' + SORTS[libState.sort]]);
   return `<div class="search"><div class="srow"><div class="search-box"><input id="q" type="search" enterkeyhint="search" placeholder="搜尋：遇到的狀況、問題或關鍵字…" value="${esc(libState.q)}" aria-label="搜尋知識卡"><button class="icon-btn" data-act="clearq" aria-label="清空搜尋" ${libState.q ? '' : 'style="visibility:hidden"'}>${ICON.clear}</button></div>
       <a class="icon-btn" href="#/import" aria-label="新增知識卡">${ICON.plus}</a></div></div>
-    <div class="frow">${fb('cat', libState.cat || '分類', !!libState.cat)}${fb('scen', libState.scen || '情境', !!libState.scen)}<button class="fbtn${libState.star ? ' on' : ''}" data-act="star">★ 重要</button>${fb('sort', '排序', libState.sort !== 'name')}</div>
+    <div class="frow">${fb('cat', libState.cat || '分類', !!libState.cat)}${fb('scen', libState.scen || '情境', !!libState.scen)}<button class="fbtn${libState.star ? ' on' : ''}" data-act="star">★ 重要</button>${fb('sort', '排序', libState.sort !== 'recent')}</div>
     ${sheet ? `<div class="chips sheet">${sheet}</div>` : ''}
     ${tags.length ? `<div class="tags">${tags.map(([k, l]) => `<button class="tag" data-act="untag" data-val="${k}" aria-label="移除 ${esc(l)}">${esc(l)} ×</button>`).join('')}</div>` : ''}
     <div id="results">${libraryResults()}</div>`;
@@ -686,7 +692,7 @@ function renderDigestTab(c, u, r) {
   const prompts = (c.prompts || []).length ? `<div class="box"><h4>實用提問句</h4>${c.prompts.map((p, i) => `<div class="prompt"><span>${esc(p)}</span><button class="copy" data-act="copy" data-idx="${i}">複製</button></div>`).join('')}</div>` : '';
   const related = relatedBox(c, u, r.q.get('links') === '1');
   return `${banner}${c.core ? `<div class="core"><b>核心　</b>${esc(c.core)}</div>` : ''}
-    <div class="jump" style="margin-top:12px">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
+    <div class="jump-sent" id="jumpSent"></div><div class="jump" id="jumpBar">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
     <div class="sections">${secs}</div>${prompts}${related}
     <div class="review">${reviewBox(u)}</div>
     <div class="review" style="padding-top:6px"><a class="btn" href="#/practice?c=${encodeURIComponent(c.id)}">用這張卡練習教學</a></div>
@@ -723,12 +729,41 @@ function fitImage() {
   box.style.height = Math.max(240, (window.innerHeight - top - player - 76) / fontScale()) + 'px';
 }
 window.addEventListener('resize', fitImage);
+function jumpBarH() { const b = $('#jumpBar'); return b ? b.getBoundingClientRect().height : 0; }
+function jumpTo(secId, smooth) {
+  const el = document.getElementById('sec-' + secId), bar = $('#jumpBar'), sent = $('#jumpSent'); if (!el) return;
+  if (bar && sent) { bar.classList.add('compact'); jumpCompact = true; }
+  const y = el.getBoundingClientRect().top + window.scrollY - jumpBarH() - 10;
+  window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'auto' });
+  markCurrent(secId);
+}
+function markCurrent(secId) {
+  const bar = $('#jumpBar'); if (!bar) return;
+  let cur = null;
+  bar.querySelectorAll('button').forEach(b => { const on = b.dataset.id === secId; b.classList.toggle('cur', on); if (on) cur = b; });
+  if (cur && bar.classList.contains('compact')) bar.scrollTo({ left: Math.max(0, cur.offsetLeft - 16), behavior: 'smooth' });
+}
+let jumpCompact = false, jumpTick = false, jumpLastCur = null;
+function onJumpScroll() {
+  jumpTick = false;
+  const bar = $('#jumpBar'), sent = $('#jumpSent'); if (!bar || !sent) return;
+  const sentY = sent.getBoundingClientRect().top + window.scrollY, y = window.scrollY;
+  if (!jumpCompact && y > sentY + 60) {
+    const h0 = bar.getBoundingClientRect().height; bar.classList.add('compact'); jumpCompact = true;
+    const d = h0 - bar.getBoundingClientRect().height; if (d > 0) window.scrollBy(0, -d);
+  } else if (jumpCompact && y < sentY) { bar.classList.remove('compact'); jumpCompact = false; bar.scrollLeft = 0; }
+  const limit = bar.getBoundingClientRect().bottom + 24; let cur = null;
+  document.querySelectorAll('.sections .sec').forEach(sec => { if (sec.getBoundingClientRect().top <= limit) cur = sec.id.slice(4); });
+  if (cur !== jumpLastCur) { jumpLastCur = cur; markCurrent(cur); }
+}
+window.addEventListener('scroll', () => { if (!jumpTick && route && route.name === 'card') { jumpTick = true; requestAnimationFrame(onJumpScroll); } }, { passive: true });
 function afterCardRender(y) {
+  jumpCompact = false; jumpLastCur = null;
   fitImage();
   const sec = route.q.get('sec');
-  if (y !== null) { window.scrollTo(0, y); return; }
+  if (y !== null) { window.scrollTo(0, y); onJumpScroll(); return; }
   window.scrollTo(0, 0);
-  if (sec && (route.q.get('tab') || 'digest') === 'digest') { const el = document.getElementById('sec-' + sec); if (el) setTimeout(() => el.scrollIntoView({ block: 'start' }), 60); }
+  if (sec && (route.q.get('tab') || 'digest') === 'digest') { const el = document.getElementById('sec-' + sec); if (el) setTimeout(() => jumpTo(sec, false), 80); }
   if (route.q.get('form') === '1') { const f = $('#rOcc'); if (f) setTimeout(() => f.focus(), 80); }
 }
 function cardHash(id, params) { const q = new URLSearchParams(params); return `#/card/${encodeURIComponent(id)}${q.toString() ? '?' + q : ''}`; }
@@ -1263,23 +1298,39 @@ async function renderSettings() {
     <div class="panel"><h3>備份與還原</h3>
       <div class="kv"><span>上次備份</span><b>${d === null ? '尚未備份' : d === 0 ? '今天' : d + ' 天前'}</b></div>
       <p>備份檔包含所有卡片、★、複習紀錄、體會與教學紀錄。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
-      <div class="btn-row"><button class="btn solid" data-act="backup">匯出完整備份</button><button class="btn danger" data-act="restore">從備份還原</button></div></div>
+      <div class="btn-row"><button class="btn solid" data-act="backup">備份（可選雲端硬碟）</button><button class="btn danger" data-act="restore">從備份還原</button></div>
+      <p style="font-size:14px">按下後會跳出分享選單，選「雲端硬碟」即可存到 Google 雲端硬碟。還原時在檔案選單左上角「≡」選雲端硬碟，就能挑選備份檔。</p>
+      <button class="linkbtn" data-act="backupdl">改為下載到手機</button></div>
     <div class="panel"><h3>字級</h3><div class="chips" style="padding:0">${[['1', '標準'], ['1.12', '大'], ['1.25', '特大']].map(([v, l]) => `<button class="chip${String(fontScale()) === v ? ' on' : ''}" data-act="fontscale" data-val="${v}">${l}</button>`).join('')}</div></div>
     <div class="panel"><h3>關於</h3>
       <div class="kv"><span>卡片數</span><b>${activeIds().length} 張${CARDS.size > activeIds().length ? `（另有封存 ${CARDS.size - activeIds().length} 張）` : ''}</b></div>
       <div class="kv"><span>永久儲存</span><b>${persisted === null ? '無法確認' : persisted ? '已啟用' : '未啟用'}</b></div>
       <div class="kv"><span>版本</span><b>v${APP_VERSION}</b></div></div>`;
 }
-async function doBackup() {
+function backupFile() {
   const cards = [...CARDS.values()].map(c => ({ ...c, user: userOf(c.id) }));
   const data = { schema_version: SCHEMA_VERSION, exported_at: new Date().toISOString(), app_version: APP_VERSION, cards, teach: { learned: TEACH.learned, logs: TEACH.logs } };
-  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wisdom-kb-backup-${today().replaceAll('-', '')}.json`;
+  const name = `wisdom-kb-backup-${today().replaceAll('-', '')}`;
+  return { text: JSON.stringify(data, null, 1), name };
+}
+async function doBackup(mode) {
+  const { text, name } = backupFile();
+  if (mode !== 'download') {
+    const file = new File([text], name + '.txt', { type: 'text/plain' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: '為人處世知識庫 備份' });
+        await setMeta('last_backup_at', today()); toast('已分享備份檔'); render(true); return;
+      } catch (e) { if (e && e.name === 'AbortError') { toast('已取消備份'); return; } }
+    }
+  }
+  const blob = new Blob([text], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  await setMeta('last_backup_at', today()); toast('已匯出完整備份'); render(true);
+  await setMeta('last_backup_at', today()); toast('已下載備份檔到手機'); render(true);
 }
 function doRestore() {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json'; inp.className = 'hidden-file';
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json,text/plain,.txt'; inp.className = 'hidden-file';
   inp.onchange = async () => {
     const f = inp.files[0]; inp.remove(); if (!f) return;
     let data; try { data = JSON.parse(await f.text()); } catch (e) { toast('檔案不是有效的 JSON'); return; }
@@ -1337,9 +1388,9 @@ document.addEventListener('click', async e => {
     case 'sheet': libState.sheet = libState.sheet === el.dataset.val ? null : el.dataset.val; render(true); break;
     case 'setcat': libState.cat = el.dataset.val; libState.sheet = null; render(true); break;
     case 'setscen': libState.scen = el.dataset.val; libState.sheet = null; render(true); break;
-    case 'setsort': libState.sort = el.dataset.val; libState.sheet = null; render(true); break;
-    case 'untag': { const k = el.dataset.val; if (k === 'cat') libState.cat = ''; else if (k === 'scen') libState.scen = ''; else if (k === 'star') libState.star = false; else if (k === 'arch') libState.archive = false; else if (k === 'sort') libState.sort = 'name'; render(true); break; }
-    case 'morerecent': Object.assign(libState, { q: '', cat: '', scen: '', star: false, archive: false, sort: 'recent', sheet: null }); go('#/library'); break;
+    case 'setsort': libState.sort = el.dataset.val; try { localStorage.setItem('lib_sort', libState.sort); } catch (e) {} libState.sheet = null; render(true); break;
+    case 'untag': { const k = el.dataset.val; if (k === 'cat') libState.cat = ''; else if (k === 'scen') libState.scen = ''; else if (k === 'star') libState.star = false; else if (k === 'arch') libState.archive = false; else if (k === 'sort') { libState.sort = 'recent'; try { localStorage.setItem('lib_sort', 'recent'); } catch (e) {} } render(true); break; }
+    case 'morerecent': Object.assign(libState, { q: '', cat: '', scen: '', star: false, archive: false, sort: 'recent', sheet: null }); try { localStorage.setItem('lib_sort', 'recent'); } catch (e) {} go('#/library'); break;
     case 'links': { const p = params(); if (p.tab !== 'reflect') p.tab = 'digest'; p.links = '1'; delete p.sec; delete p.q; history.replaceState(null, '', cardHash(c.id, p)); render(false); setTimeout(() => { const b = $('#relbox'); if (b) b.scrollIntoView({ block: 'start' }); }, 80); break; }
     case 'linksdone': { const p = params(); delete p.links; history.replaceState(null, '', cardHash(c.id, p)); render(true); break; }
     case 'cardmenu': {
@@ -1373,7 +1424,7 @@ document.addEventListener('click', async e => {
       await saveUser(u); const p = params(); delete p.form; history.replaceState(null, '', cardHash(c.id, p)); toast('已儲存'); render(false); break;
     }
     case 'delref': { if (!confirm('刪除這筆體會？')) return; const u = userOf(c.id); u.reflections = u.reflections.filter(r => r.id !== el.dataset.id); await saveUser(u); render(true); break; }
-    case 'jump': { const s = document.getElementById('sec-' + el.dataset.id); if (s) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); const i = Number(s && s.dataset.idx); if (!tts.playing && !isNaN(i)) { tts.idx = i; updatePlayer(); } break; }
+    case 'jump': { const s = document.getElementById('sec-' + el.dataset.id); jumpTo(el.dataset.id, false); const i = Number(s && s.dataset.idx); if (!tts.playing && !isNaN(i)) { tts.idx = i; updatePlayer(); } break; }
     case 'playsec': { const i = Number(el.dataset.idx); if (tts.playing && tts.idx === i && tts.mode === 'single') ttsStop(); else { tts.mode = 'single'; speakIdx(i); } break; }
     case 'copy': { const txt = c.prompts[Number(el.dataset.idx)]; try { await navigator.clipboard.writeText(txt); toast('已複製'); } catch (err) { toast('無法複製，請長按文字選取'); } break; }
     case 'viewer': openViewer(c.image_url); break;
@@ -1389,6 +1440,7 @@ document.addEventListener('click', async e => {
     case 'cancelimport': importState.preview = null; render(true); break;
     case 'savecloud': localStorage.setItem('cloudinary_name', $('#cName').value.trim()); localStorage.setItem('cloudinary_preset', $('#cPreset').value.trim()); toast('已儲存設定'); break;
     case 'backup': await doBackup(); break;
+    case 'backupdl': await doBackup('download'); break;
     case 'restore': doRestore(); break;
   }
 });
