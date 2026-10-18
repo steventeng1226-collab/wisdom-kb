@@ -209,6 +209,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 .pr-ex{color:var(--ink);background:#E2F0EC;border-radius:6px;padding:4px 8px;margin-top:4px;line-height:1.65}
 .ins{margin:4px 0;font-size:18px;line-height:1.7;font-family:var(--serif);color:var(--accent)}
 .ins-in{width:100%;min-height:90px;border:1.5px solid var(--line2);border-radius:10px;padding:10px 12px;font-size:17px;line-height:1.6}
+.banner.warnb{background:#FDECEC;border-color:#C53B3B;color:#7A1F1F}
 /* tabbar */
 #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:var(--safe-b)}
 #tabbar.hide{display:none}
@@ -261,7 +262,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.6.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -339,8 +340,8 @@ function newUser(id) {
 function userOf(id) { if (!USER.has(id)) USER.set(id, newUser(id)); return USER.get(id); }
 const isActive = id => !userOf(id).archived;
 const activeIds = () => [...CARDS.keys()].filter(isActive);
-async function saveUser(u) { USER.set(u.card_id, u); await put('user', u); }
-async function saveCard(c) { CARDS.set(c.id, c); await put('cards', c); }
+async function saveUser(u) { USER.set(u.card_id, u); await put('user', u); markDirty(); }
+async function saveCard(c) { CARDS.set(c.id, c); await put('cards', c); markDirty(); }
 
 /* ---------- Cloudinary ---------- */
 function thumbUrl(url) { return url && url.includes('/upload/') ? url.replace('/upload/', '/upload/c_fill,g_north,w_180,h_240,q_auto,f_auto/') : url; }
@@ -540,9 +541,9 @@ async function renderHome() {
       <button class="icon-btn" data-act="random" aria-label="隨機抽一張">${ICON.dice}</button>
       <a class="icon-btn" href="#/import" aria-label="新增知識卡">${ICON.plus}</a></div></div>
     <div class="page-sub">${d.getMonth()+1} 月 ${d.getDate()} 日・共 ${activeIds().length} 張卡・v${APP_VERSION}</div>`;
-  if (!activeIds().length) return head + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，按右上角「＋」匯入。<a class="btn solid" href="#/import">新增知識卡</a></div>`;
+  if (!activeIds().length) return head + (await gsBanner()) + `<div class="empty">還沒有卡片。把圖給 Claude 產出卡片資料後，按右上角「＋」匯入。<a class="btn solid" href="#/import">新增知識卡</a>${gsOn() ? '<button class="btn" data-act="gsrestore">從 Google Sheets 還原</button>' : ''}</div>`;
   const last = await getMeta('last_backup_at'); const bd = last ? daysSince(last) : null;
-  const backup = (bd === null || bd >= 14) ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px">${bd === null ? '還沒有備份過' : `已 ${bd} 天沒有備份`}。資料只存在這支手機，建議定期備份。<button class="copy" data-act="backup">立即備份</button></div>` : '';
+  const backup = gsOn() ? await gsBanner() : (bd === null || bd >= 7) ? `<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px">${bd === null ? '還沒有備份過' : `已 ${bd} 天沒有備份`}。資料只存在這支手機，建議到設定開啟 Google Sheets 自動備份。<button class="copy" data-act="backup">立即備份</button></div>` : '';
   const ids = await todayPicks();
   const done = ids.filter(id => userOf(id).last_reviewed_at === today()).length;
   const item = (id, kind) => {
@@ -971,7 +972,7 @@ const METHODS = [
 const METHOD_MAP = Object.fromEntries(METHODS.map(m => [m.id, m]));
 const TEACH = { learned: {}, logs: [] };
 async function loadTeach() { TEACH.learned = (await getMeta('teach_learned')) || {}; TEACH.logs = (await getMeta('teach_logs')) || []; }
-async function saveTeach() { await setMeta('teach_learned', TEACH.learned); await setMeta('teach_logs', TEACH.logs); }
+async function saveTeach() { await setMeta('teach_learned', TEACH.learned); await setMeta('teach_logs', TEACH.logs); markDirty(); }
 function suitableCards(m) {
   return [...CARDS.values()].filter(c => isActive(c.id) && (m.cats === 'all' || (m.cats === 'image' ? !!c.image_url : m.cats.includes(c.category))));
 }
@@ -1287,6 +1288,22 @@ async function doImport() {
 }
 
 /* ---------- settings ---------- */
+async function gsPanel() {
+  const c = gsCfg(), st = (await getMeta('gs_status')) || {};
+  const state = !gsOn() ? '<b style="color:var(--danger)">未開啟</b>' : st.ok === false ? `<b style="color:var(--danger)">失敗</b>` : st.at ? '<b style="color:var(--accent)">正常</b>' : '<b>尚未備份</b>';
+  return `<div class="panel"><h3>Google Sheets 自動備份</h3>
+      <p>資料有變動約 30 秒後自動備份；關閉 APP 時也會補傳。手機資料被清掉時，可以一鍵從 Google Sheets 還原。</p>
+      <div class="field"><label for="gsUrl">Apps Script 網頁應用程式網址</label><input id="gsUrl" value="${esc(c.url)}" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      <div class="field"><label for="gsSecret">密碼（與 Apps Script 程式裡的 SECRET 相同）</label><input id="gsSecret" value="${esc(c.secret)}" autocomplete="off"></div>
+      <div class="btn-row"><button class="btn solid" data-act="gstest">儲存並測試連線</button></div>
+      <div class="kv"><span>狀態</span>${state}</div>
+      <div class="kv"><span>上次自動備份</span><b>${st.ok && st.at ? gsAgo(st.at) : '—'}</b></div>
+      ${st.error ? `<p style="color:var(--danger);font-size:15px">${esc(st.error)}</p>` : ''}
+      <div class="kv"><span>雲端卡片數</span><b>${st.remote != null ? st.remote + ' 張' : '—'}</b></div>
+      <div class="kv"><span>Sheets 程式版本</span><b>${st.version ? 'v' + esc(st.version) : '—'}</b></div>
+      ${gsOn() ? `<div class="btn-row"><button class="btn" data-act="gsnow">立即備份</button><button class="btn danger" data-act="gsrestore">從 Google Sheets 還原</button></div>` : ''}
+      <div class="banner warnb" style="margin:4px 0 0">不要清除這個網站的「Cookie 和網站資料」，手機上的資料會全部消失。更新 APP 只要關掉重開；真的要清，只勾「快取的圖片和檔案」。</div></div>`;
+}
 async function renderSettings() {
   const last = await getMeta('last_backup_at'); const d = last ? daysSince(last) : null;
   let persisted = null; try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; } catch (e) {}
@@ -1295,7 +1312,8 @@ async function renderSettings() {
       <div class="field"><label for="cName">Cloud name</label><input id="cName" value="${esc(localStorage.getItem('cloudinary_name') || '')}" autocomplete="off"></div>
       <div class="field"><label for="cPreset">Upload preset</label><input id="cPreset" value="${esc(localStorage.getItem('cloudinary_preset') || '')}" autocomplete="off"></div>
       <div class="btn-row"><button class="btn solid" data-act="savecloud">儲存設定</button></div></div>
-    <div class="panel"><h3>備份與還原</h3>
+    ${await gsPanel()}
+    <div class="panel"><h3>備份檔（手動）</h3>
       <div class="kv"><span>上次備份</span><b>${d === null ? '尚未備份' : d === 0 ? '今天' : d + ' 天前'}</b></div>
       <p>備份檔包含所有卡片、★、複習紀錄、體會與教學紀錄。原圖存在 Cloudinary，請另外保留在相簿或雲端硬碟。</p>
       <div class="btn-row"><button class="btn solid" data-act="backup">備份（可選雲端硬碟）</button><button class="btn danger" data-act="restore">從備份還原</button></div>
@@ -1337,14 +1355,94 @@ function doRestore() {
     if (!data.schema_version || !Array.isArray(data.cards)) { toast('這不是 APP 匯出的備份檔；卡片資料請用「匯入」'); return; }
     if (data.schema_version !== SCHEMA_VERSION) { toast(`備份格式 ${data.schema_version} 與目前 ${SCHEMA_VERSION} 不符，未還原`); return; }
     if (!confirm(`還原會用備份內容取代目前所有卡片與紀錄（備份共 ${data.cards.length} 張）。確定還原？`)) return;
-    await idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('user').clear();
-      for (const c of data.cards) { const { user, ...card } = c; t.objectStore('cards').put(card); t.objectStore('user').put({ ...newUser(card.id), ...(user || {}), card_id: card.id }); } });
-    await setMeta('home_today', null);
-    if (data.teach) { TEACH.learned = data.teach.learned || {}; TEACH.logs = data.teach.logs || []; await saveTeach(); }
-    await loadAll(); toast(`已還原 ${data.cards.length} 張卡`); render(false);
+    await applyBackupData(data); await finishRestore(data); markDirty();
+    toast(`已還原 ${data.cards.length} 張卡`); render(false);
   };
   document.body.appendChild(inp); inp.click();
 }
+
+/* ---------- Google Sheets 自動備份 ---------- */
+const GS = { timer: null, busy: false };
+function gsCfg() { try { return { url: (localStorage.getItem('gs_url') || '').trim(), secret: (localStorage.getItem('gs_secret') || '').trim() }; } catch (e) { return { url: '', secret: '' }; } }
+function gsOn() { const c = gsCfg(); return !!(c.url && c.secret); }
+function gsDirty(v) { try { if (v) localStorage.setItem('gs_dirty', '1'); else localStorage.removeItem('gs_dirty'); } catch (e) {} }
+function gsIsDirty() { try { return localStorage.getItem('gs_dirty') === '1'; } catch (e) { return false; } }
+const GS_ERR = { bad_secret: '密碼不符，請確認 APP 與 Apps Script 的密碼相同', busy: '試算表忙碌中，稍後自動重試', bad_action: '程式版本不符', bad_json: '傳送資料格式錯誤' };
+async function gsCall(action, extra) {
+  const c = gsCfg();
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(c.url)) throw new Error('網址格式不對，應以 https://script.google.com/ 開頭');
+  let r;
+  try { r = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ secret: c.secret, action, ...(extra || {}) }) }); }
+  catch (e) { throw new Error(navigator.onLine ? '連不到 Apps Script，請確認部署的存取權為「所有人」' : '目前離線，有網路時會自動補傳'); }
+  const t = await r.text(); let j;
+  try { j = JSON.parse(t); } catch (e) { throw new Error('回應格式不對，請確認貼的是「網頁應用程式」網址，且存取權為「所有人」'); }
+  if (!j.ok && j.error !== 'shrink') throw new Error(GS_ERR[j.error] || String(j.error || '未知錯誤'));
+  return j;
+}
+function markDirty() { if (!gsOn()) return; gsDirty(true); clearTimeout(GS.timer); GS.timer = setTimeout(() => gsBackup(false), 30000); }
+async function gsBackup(force, manual) {
+  if (!gsOn() || GS.busy) return;
+  GS.busy = true; clearTimeout(GS.timer);
+  let status;
+  try {
+    const cards = [...CARDS.values()].map(c => ({ ...c, user: userOf(c.id) }));
+    if (!cards.length && !force) throw new Error('手機上沒有卡片，已暫停自動備份，避免蓋掉雲端資料');
+    const j = await gsCall('backup', { force: !!force, payload: { schema_version: SCHEMA_VERSION, app_version: APP_VERSION, exported_at: new Date().toISOString(), cards, teach: { learned: TEACH.learned, logs: TEACH.logs } } });
+    if (!j.ok) { status = { ok: false, at: new Date().toISOString(), shrink: { remote: j.remote_count, local: j.local_count }, error: `雲端有 ${j.remote_count} 張卡，手機只有 ${j.local_count} 張，已暫停覆蓋雲端` }; }
+    else { gsDirty(false); status = { ok: true, at: new Date().toISOString(), count: cards.length, version: j.version, remote: cards.length }; await setMeta('last_backup_at', today()); }
+  } catch (e) { status = { ok: false, at: new Date().toISOString(), error: e.message }; }
+  finally { GS.busy = false; }
+  const prev = await getMeta('gs_status'); await setMeta('gs_status', status);
+  if (manual) toast(status.ok ? `已備份到 Google Sheets（${status.count} 張）` : status.error);
+  if (route && (route.name === 'settings' || (route.name === 'home' && (!status.ok || (prev && !prev.ok))))) render(true);
+}
+function applyBackupData(data) {
+  return idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('user').clear();
+    for (const c of data.cards) { const { user, ...card } = c; t.objectStore('cards').put(card); t.objectStore('user').put({ ...newUser(card.id), ...(user || {}), card_id: card.id }); } });
+}
+async function finishRestore(data) {
+  await setMeta('home_today', null);
+  if (data.teach) { TEACH.learned = data.teach.learned || {}; TEACH.logs = data.teach.logs || []; await setMeta('teach_learned', TEACH.learned); await setMeta('teach_logs', TEACH.logs); }
+  await loadAll();
+}
+async function gsRestore() {
+  if (!gsOn()) { toast('請先在設定填寫 Google Sheets 網址與密碼'); return; }
+  toast('從 Google Sheets 讀取中…');
+  let j; try { j = await gsCall('restore'); } catch (e) { toast(e.message); return; }
+  const data = j.data;
+  if (!data || !Array.isArray(data.cards) || !data.cards.length) { toast('Google Sheets 裡還沒有備份資料'); return; }
+  if (!confirm(`從 Google Sheets 還原 ${data.cards.length} 張卡（備份時間 ${String(j.backup_at || '').replace('T', ' ').slice(0, 16)}）。會取代手機上目前的卡片與紀錄，確定還原？`)) return;
+  await applyBackupData(data); await finishRestore(data);
+  gsDirty(false); await setMeta('gs_status', { ok: true, at: new Date().toISOString(), count: data.cards.length, version: j.version, remote: data.cards.length, restored: true });
+  toast(`已從 Google Sheets 還原 ${data.cards.length} 張卡`); render(false);
+}
+async function gsTest() {
+  const url = $('#gsUrl').value.trim(), secret = $('#gsSecret').value.trim();
+  try { localStorage.setItem('gs_url', url); localStorage.setItem('gs_secret', secret); } catch (e) {}
+  if (!url || !secret) { toast('已清除 Google Sheets 設定，自動備份已關閉'); render(true); return; }
+  toast('測試連線中…');
+  try {
+    const j = await gsCall('ping');
+    const st = (await getMeta('gs_status')) || {};
+    await setMeta('gs_status', { ...st, version: j.version, remote: j.card_count || 0 });
+    toast(`連線成功：Sheets 程式 v${j.version}，雲端目前 ${j.card_count || 0} 張卡`);
+    if (CARDS.size && !(j.card_count > 0)) gsBackup(false, true); else render(true);
+  } catch (e) { toast('連線失敗：' + e.message); }
+}
+function gsAgo(iso) {
+  if (!iso) return '尚未備份';
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  return m < 1 ? '剛剛' : m < 60 ? `${m} 分鐘前` : m < 1440 ? `${Math.round(m / 60)} 小時前` : `${Math.round(m / 1440)} 天前`;
+}
+async function gsBanner() {
+  if (!gsOn()) return '';
+  const st = await getMeta('gs_status');
+  if (st && st.shrink) return `<div class="banner warnb"><div>${esc(st.error)}。</div><div class="btn-row" style="margin-top:8px"><button class="copy" data-act="gsrestore">從雲端還原</button><button class="copy" data-act="gsforce">以手機為準覆蓋雲端</button></div></div>`;
+  if (st && !st.ok) return `<div class="banner warnb" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>自動備份失敗：${esc(st.error)}</span><button class="copy" data-act="gsnow">重試</button></div>`;
+  return '';
+}
+window.addEventListener('online', () => { if (gsIsDirty()) gsBackup(false); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && gsIsDirty()) gsBackup(false); });
 
 /* ---------- actions ---------- */
 document.addEventListener('click', async e => {
@@ -1380,7 +1478,7 @@ document.addEventListener('click', async e => {
       if (!confirm(`刪除「${c.title}」？卡片內容、複習紀錄和體會都會一起刪除，無法復原。\n\n只是過時的話，建議改用「封存」。`)) return;
       const id = c.id;
       await idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').delete(id); t.objectStore('user').delete(id); });
-      CARDS.delete(id); USER.delete(id);
+      CARDS.delete(id); USER.delete(id); markDirty();
       const saved = await getMeta('home_today'); if (saved && saved.ids) { saved.ids = saved.ids.filter(x => x !== id); await setMeta('home_today', saved); }
       ttsStop(); toast('已刪除'); location.hash = '#/library'; break;
     }
@@ -1405,6 +1503,10 @@ document.addEventListener('click', async e => {
     }
     case 'copyspec': try { await navigator.clipboard.writeText(SPEC_TEXT); toast('已複製格式說明'); } catch (err) { toast('無法自動複製'); } break;
     case 'fontscale': localStorage.setItem('font_scale', el.dataset.val); applyFontScale(); render(true); break;
+    case 'gstest': await gsTest(); break;
+    case 'gsnow': await gsBackup(false, true); break;
+    case 'gsforce': if (confirm('以手機上的資料覆蓋 Google Sheets？雲端多出來的卡片會被刪除（前一版會保留在「卡片_前一版」工作表）。')) await gsBackup(true, true); break;
+    case 'gsrestore': await gsRestore(); break;
     case 'swap': await todayPicks(true); render(true); toast('已換一批'); break;
     case 'random': { const ids = activeIds(); if (ids.length) go(`#/card/${encodeURIComponent(ids[Math.floor(Math.random() * ids.length)])}`); break; }
     case 'clearq': libState.q = ''; $('#q').value = ''; $('#results').innerHTML = libraryResults(); el.style.visibility = 'hidden'; $('#q').focus(); break;
@@ -1460,6 +1562,7 @@ function applyFontScale() { $('#view').style.zoom = fontScale(); }
   await loadAll(); await loadTeach(); applyFontScale();
   if (!location.hash) history.replaceState(null, '', '#/home');
   render(false);
+  if (gsOn() && CARDS.size) { const st = await getMeta('gs_status'); if (gsIsDirty() || !st || !st.at || Date.now() - new Date(st.at) > 86400000) setTimeout(() => gsBackup(false), 3000); }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
