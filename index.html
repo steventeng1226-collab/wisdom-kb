@@ -262,7 +262,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -1201,7 +1201,7 @@ function renderImport() {
     prev = `<div class="panel"><h3>檢查結果</h3>
       ${p.errors.length ? `<div class="err">${p.errors.map(esc).join('<br>')}</div><p>請把這個 JSON 交給 Claude 依規格修正，或複製格式說明，貼給產出它的 AI 重新產出。</p><button class="btn" data-act="copyspec">複製格式說明</button>` : ''}
       ${p.items.map((it, i) => { const c = it.card, ns = c.sections.length, na = c.sections.filter(s => s.audio_script).length, nr = (c.related_card_ids || []).length;
-        return `<div class="prevcard"><label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><b>${esc(c.title)}</b><div class="st ${it.older ? 'warn' : ''}">${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${c.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${c.content_version}），★、複習、體會與關聯都保留`}</div></div></label>
+        return `<div class="prevcard"><label class="prev"><input type="checkbox" data-pi="${i}" ${it.checked ? 'checked' : ''}><div><b>${esc(c.title)}</b><div class="st ${it.older ? 'warn' : ''}">${c._auto_id ? '已依標題自動產生 id・' : ''}${it.isNew ? '新卡片' : it.older ? `較舊版本（現有 v${it.curVer}，匯入 v${c.content_version}），勾選才會覆蓋` : `更新內容（v${it.curVer} → v${c.content_version}），★、複習、體會與關聯都保留`}</div></div></label>
           ${ok(true, '分類：' + esc(c.category))}${ok(true, `段落：${ns} 段`)}${ok(na === ns, `朗讀稿：${na}／${ns} 段`)}
           ${ok(!!c._image_data || it.hasImg, c._image_data ? '原圖：含原圖，匯入時自動上傳' : it.hasImg ? '原圖：保留現有原圖' : '原圖：未含原圖，匯入後可上傳')}
           ${ok(nr > 0, nr ? `關聯卡片：${nr} 張` : '關聯卡片：尚未設定，匯入後可在卡片頁加入')}</div>`; }).join('')}
@@ -1224,11 +1224,18 @@ function normTeaching(t) {
   return out;
 }
 const hasTeach = (c, mid) => !!(c.teaching && c.teaching[mid] && c.teaching[mid].some(Boolean));
+function autoCardId(title) {
+  let h = 0x811c9dc5; const t = String(title).replace(/\s+/g, '');
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return 'card_auto_' + h.toString(16).padStart(8, '0');
+}
 function normalizeCard(raw, errors) {
   const where = raw && raw.title ? `「${raw.title}」` : `卡片 ${raw && raw.id ? raw.id : ''}`;
   const bad = m => { errors.push(where + '：' + m); return null; };
   if (!raw || typeof raw !== 'object') return bad('格式不是卡片物件');
-  if (!raw.id || typeof raw.id !== 'string') return bad('缺少 id');
+  let autoId = false;
+  if ((!raw.id || typeof raw.id !== 'string') && raw.title) { raw = { ...raw, id: autoCardId(raw.title) }; autoId = true; }
+  if (!raw.id || typeof raw.id !== 'string') return bad('缺少 id 和 title');
   if (!raw.title) return bad('缺少 title');
   if (!raw.one_liner) return bad('缺少 one_liner');
   if (!CATEGORIES.includes(raw.category)) return bad(`分類「${raw.category || ''}」不在分類清單內（${CATEGORIES.join('、')}）`);
@@ -1244,7 +1251,7 @@ function normalizeCard(raw, errors) {
     if (sb.length) return bad(`第 ${i + 1} 段內容性質「${sb.join('、')}」不是合法值`);
     sections.push({ id: s.id, chip: s.chip || `${i + 1} ${s.rule.slice(0, 2)}`, rule: s.rule, desc: s.desc, keywords: arr(s.keywords), scenarios: arr(s.scenarios), nature: sn.length ? sn : nat, sources: arr(s.sources), audio_script: s.audio_script || '', extended_card_id: s.extended_card_id || null });
   }
-  return { id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '', teaching: normTeaching(raw.teaching), _image_data: typeof raw.image_data === 'string' && raw.image_data.startsWith('data:image/') ? raw.image_data : null };
+  return { _auto_id: autoId, id: raw.id, content_version: Number(raw.content_version) || 1, updated_at: raw.updated_at || today(), title: raw.title, one_liner: raw.one_liner, category: raw.category, nature: nat, sources: arr(raw.sources), tags: arr(raw.tags), scenarios: arr(raw.scenarios), core: raw.core || '', prompts: arr(raw.prompts), sections, related_card_ids: arr(raw.related_card_ids), image_url: raw.image_url || '', teaching: normTeaching(raw.teaching), _image_data: typeof raw.image_data === 'string' && raw.image_data.startsWith('data:image/') ? raw.image_data : null };
 }
 const IMG_MSG = '這是圖片檔。請先把圖交給 Claude 產出卡片資料，匯入後再上傳原圖。';
 function isImageFile(f) { return /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|heic|heif)$/i.test(f.name); }
@@ -1271,7 +1278,7 @@ async function doImport() {
   for (const it of p.items) {
     if (!it.checked) continue;
     const cur = CARDS.get(it.card.id);
-    const { _image_data, ...card } = it.card; if (!card.image_url && cur && cur.image_url) card.image_url = cur.image_url;
+    const { _image_data, _auto_id, ...card } = it.card; if (!card.image_url && cur && cur.image_url) card.image_url = cur.image_url;
     await saveCard(card);
     if (!USER.has(card.id)) await saveUser(newUser(card.id));
     ids.push(card.id); if (_image_data) withImg.push([card.id, _image_data]);
