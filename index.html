@@ -118,6 +118,8 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .manage .del{color:var(--danger)}
 .img-fit{margin:10px 12px 0;height:60vh;display:flex;align-items:flex-start;justify-content:center;padding:0;border:none;background:transparent;width:calc(100% - 24px)}
 .img-fit img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+.img-fit.long{height:auto!important}.img-fit.long img{width:100%;max-height:none}
+.img-foot .copy{flex:none}
 .img-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 16px 0;min-height:48px;font-size:15px;color:var(--ink2)}
 .done-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:60px;border-top:1px solid #EEE9DF;font-size:16px}
 .done-row .name{flex:1;min-width:0}
@@ -288,7 +290,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -376,8 +378,10 @@ function compressImage(file) {
   return new Promise((res, rej) => {
     const img = new Image(); const u = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 2400; let w = img.naturalWidth, h = img.naturalHeight;
-      const s = Math.min(1, MAX / Math.max(w, h)); w = Math.round(w * s); h = Math.round(h * s);
+      let w = img.naturalWidth, h = img.naturalHeight;
+      // 一般圖：最長邊 2400；長圖（高 > 寬 2 倍）：保留寬度最多 1440，高度上限 16000、總像素上限 2000 萬
+      const s = h > w * 2 ? Math.min(1, 1440 / w, 16000 / h, Math.sqrt(20e6 / (w * h))) : Math.min(1, 2400 / Math.max(w, h));
+      w = Math.round(w * s); h = Math.round(h * s);
       const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
       const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(u);
@@ -724,7 +728,7 @@ function renderCard(r) {
 function renderImageTab(c) {
   if (!c.image_url) return `<div class="empty">這張卡還沒有原圖。上傳後會壓縮存到 Cloudinary，看過一次之後離線也能看。<button class="btn solid" data-act="upload">上傳原圖</button></div>`;
   return `<button class="img-fit" id="imgFit" data-act="viewer" aria-label="放大查看原圖"><img id="cardImg" src="${esc(c.image_url)}" alt="${esc(c.title)} 原圖"></button>
-    <div class="img-foot"><span>點圖可放大・更換原圖在右上角「⋮」</span></div>`;
+    <div class="img-foot"><span>點圖可放大</span><button class="copy" data-act="shareimg">分享圖卡</button></div>`;
 }
 function renderDigestTab(c, u, r) {
   const hitId = r.q.get('q') ? r.q.get('sec') : null;
@@ -774,6 +778,9 @@ function renderReflectTab(c, u, open, editIns, linksOpen) {
 }
 function fitImage() {
   const box = $('#imgFit'); if (!box) return;
+  const im = $('#cardImg');
+  if (im && !im.complete) { im.addEventListener('load', fitImage, { once: true }); }
+  if (im && im.naturalWidth && im.naturalHeight > im.naturalWidth * 2.2) { box.classList.add('long'); return; }
   const top = box.getBoundingClientRect().top + window.scrollY;
   const player = $('#player').offsetHeight || 72;
   box.style.height = Math.max(240, (window.innerHeight - top - player - 76) / fontScale()) + 'px';
@@ -908,6 +915,28 @@ $('#pMore').addEventListener('click', e => {
 function closeMenu() { const m = $('.menu'); if (m) m.remove(); }
 document.addEventListener('click', e => { if (!e.target.closest('.menu') && !e.target.closest('#pMore')) closeMenu(); });
 if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+
+/* ---------- share card image ---------- */
+async function shareCardImage(c) {
+  if (!c.image_url) { toast('這張卡還沒有原圖'); return; }
+  toast('準備圖片中…');
+  let file;
+  try {
+    const src = await (await fetch(c.image_url, { mode: 'cors' })).blob();
+    const bmp = await createImageBitmap(src);
+    const cv = document.createElement('canvas'); cv.width = bmp.width; cv.height = bmp.height;
+    const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(bmp, 0, 0);
+    const jpg = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('轉檔失敗')), 'image/jpeg', 0.92));
+    const name = (c.title.split(/[：:]/)[0].replace(/[\\/:*?"<>|\s]+/g, '').slice(0, 30) || 'card') + '.jpg';
+    file = new File([jpg], name, { type: 'image/jpeg' });
+  } catch (e) { toast('無法取得原圖，請確認網路後再試'); return; }
+  const text = `${c.title}\n${c.one_liner}`;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: c.title, text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); toast('已下載圖片，可從相簿或下載資料夾分享');
+}
 
 /* ---------- image viewer ---------- */
 const vw = { s: 1, x: 0, y: 0, pts: new Map(), start: null, lastTap: 0 };
@@ -1339,7 +1368,7 @@ async function doImport() {
   if (withImg.length && !hasCloud()) failed = withImg.length;
   else for (const [i, [id, data]] of withImg.entries()) {
     toast(`上傳原圖 ${i + 1} / ${withImg.length}…`);
-    try { const blob = await (await fetch(data)).blob(); await uploadBlob(id, blob); } catch (e) { failed++; }
+    try { const raw = await (await fetch(data)).blob(); const blob = await compressImage(raw); await uploadBlob(id, blob); } catch (e) { failed++; }
   }
   toast(failed ? `已匯入 ${ids.length} 張卡；${failed} 張原圖未上傳${hasCloud() ? '，請按「上傳原圖」重試' : '，請先到「設定」填寫 Cloudinary'}` : `已匯入 ${ids.length} 張卡${withImg.length ? '，原圖已上傳' : ''}`);
   render(false);
@@ -1570,7 +1599,7 @@ document.addEventListener('click', async e => {
     case 'linksdone': { const p = params(); delete p.links; history.replaceState(null, '', cardHash(c.id, p)); render(true); break; }
     case 'cardmenu': {
       const u = userOf(c.id); const m = document.createElement('div'); m.className = 'menu top';
-      m.innerHTML = `<button data-act="upload">${c.image_url ? '更換原圖' : '上傳原圖'}</button><button data-act="links">加入關聯卡片</button><button data-act="toggleforme">${u.for_me ? '移出給我的建議' : '加入給我的建議'}</button><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button data-act="delcard" style="color:var(--danger)">刪除這張卡</button>`;
+      m.innerHTML = `${c.image_url ? '<button data-act="shareimg">分享圖卡</button>' : ''}<button data-act="upload">${c.image_url ? '更換原圖' : '上傳原圖'}</button><button data-act="links">加入關聯卡片</button><button data-act="toggleforme">${u.for_me ? '移出給我的建議' : '加入給我的建議'}</button><button data-act="${u.archived ? 'unarchive' : 'archive'}">${u.archived ? '恢復這張卡' : '封存這張卡'}</button><button data-act="delcard" style="color:var(--danger)">刪除這張卡</button>`;
       document.body.appendChild(m); m.addEventListener('click', () => setTimeout(closeMenu, 0)); break;
     }
     case 'clipjson': {
@@ -1607,6 +1636,7 @@ document.addEventListener('click', async e => {
     case 'playsec': { const i = Number(el.dataset.idx); if (tts.playing && tts.idx === i && tts.mode === 'single') ttsStop(); else { tts.mode = 'single'; speakIdx(i); } break; }
     case 'copy': { const txt = c.prompts[Number(el.dataset.idx)]; try { await navigator.clipboard.writeText(txt); toast('已複製'); } catch (err) { toast('無法複製，請長按文字選取'); } break; }
     case 'viewer': openViewer(c.image_url); break;
+    case 'shareimg': await shareCardImage(c); break;
     case 'upload': pickImageFor(c.id, () => render(true)); break;
     case 'upimg': pickImageFor(el.dataset.id, () => render(true)); break;
     case 'checkjson': { const t = $('#jsonIn').value.trim(); if (!t) { toast('請先貼上卡片 JSON'); return; } checkJson(t); render(true); break; }
