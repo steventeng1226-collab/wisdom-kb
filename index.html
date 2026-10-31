@@ -121,6 +121,10 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .img-fit.long{height:auto!important}.img-fit.long img{width:100%;max-height:none}
 .img-foot .copy{flex:none}
 .img-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 16px 0;min-height:48px;font-size:15px;color:var(--ink2)}
+.gsline{font-size:16px;font-weight:700;padding:10px 12px;border-radius:10px;margin:4px 0 10px;background:#E7F1EE;color:#0E4D45;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.gsline.ok{background:#E3F2E6;color:#1E6B34}
+.gsline.bad{background:#FCEBEA;color:#9B2C22}
+.gsline a{color:inherit}
 .done-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:60px;border-top:1px solid #EEE9DF;font-size:16px}
 .done-row .name{flex:1;min-width:0}
 .done-row .acts{flex:none;display:flex;gap:8px}
@@ -290,7 +294,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.10.1';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -1257,8 +1261,9 @@ const SPEC_TEXT = `請依以下格式產出「為人處世知識庫」的卡片 
 - tags、scenarios：陣列（scenarios 寫成遇到狀況時會搜尋的字，例「提拔幹部」）
 - core：一句核心
 - prompts：實用提問句陣列，沒有就空陣列
-- related_card_ids：關聯卡片 id 陣列，不知道就空陣列
+- related_card_ids：關聯卡片 id 陣列；有提供卡片清單時，從清單挑相關的卡填入，沒有就空陣列
 - image_url：空字串
+- image_data（選填）：原圖，data URL 字串（建議 WebP，例 data:image/webp;base64,...），匯入時會自動上傳
 - teaching（選填）：預先寫好的教學範例，物件，鍵是教學方法代碼，值是字串陣列，依該方法的步驟順序，每步一句。可用的方法與步驟：
   prep：結論、原因、舉例、再講結論
   ask：拋出問題、聽對方想法、追問、引出觀念、確認理解
@@ -1268,7 +1273,7 @@ const SPEC_TEXT = `請依以下格式產出「為人處世知識庫」的卡片 
 - for_me（選填）：true 表示這是寫給我本人的建議，匯入後會歸入「給我的建議」
 - sections：段落陣列，每段包含 id、chip（例「① 通」）、rule（段落名稱）、desc（精華內容）、keywords（陣列）、scenarios（陣列）、nature（陣列）、sources（陣列，與整卡不同時才填）、audio_script（口語化朗讀稿）、extended_card_id（null）
 
-規則：內容只取自原圖，不加入原圖沒有的觀點；整卡有多個來源時，每段都要填 sources。
+規則：內容只取自原圖，不加入原圖沒有的觀點；每一段都要有 audio_script（朗讀稿）；整卡有多個來源時，每段都要填 sources。
 
 範例：
 {"id":"card_example","content_version":1,"updated_at":"2026-10-08","title":"範例主題","one_liner":"一句精華","category":"做人處世","nature":["個人整理"],"sources":["來源"],"tags":["標籤"],"scenarios":["情境"],"core":"一句核心","prompts":[],"related_card_ids":[],"image_url":"","sections":[{"id":"sec_1","chip":"① 重點","rule":"段落名稱","desc":"精華內容","keywords":["關鍵字"],"scenarios":["情境"],"nature":["個人整理"],"sources":[],"audio_script":"朗讀稿","extended_card_id":null}]}`;
@@ -1286,7 +1291,7 @@ function renderImport() {
           ${ok(nr > 0, nr ? `關聯卡片：${nr} 張` : '關聯卡片：尚未設定，匯入後可在卡片頁加入')}</div>`; }).join('')}
       ${p.items.length ? `<div class="btn-row"><button class="btn solid" data-act="doimport">確認匯入</button><button class="btn" data-act="cancelimport">取消</button></div>` : ''}</div>`;
   }
-  const done = importState.done.length ? `<div class="panel"><h3>已匯入的卡片</h3>${hasCloud() ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
+  const done = importState.done.length ? `<div class="panel"><h3>已匯入的卡片</h3>${gsImportLine(importState.gs)}${hasCloud() ? '' : '<p>先到「設定」填寫 Cloudinary 才能上傳原圖。</p>'}
       ${importState.done.filter(id => CARDS.has(id)).map(id => { const c = CARDS.get(id); return `<div class="done-row"><div class="name"><b>${esc(c.title)}</b><div class="st">${c.image_url ? '已有原圖' : '尚未上傳原圖'}</div></div>
         <div class="acts"><button class="copy" data-act="upimg" data-id="${esc(id)}">${c.image_url ? '更換' : '上傳原圖'}</button><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#/card/${encodeURIComponent(id)}">開啟</a></div></div>`; }).join('')}</div>` : '';
   return `<div class="card-head"><div class="card-top"><button class="icon-btn" data-act="back" aria-label="返回">${ICON.back}</button><h1 class="card-title">新增知識卡</h1></div></div>
@@ -1363,15 +1368,20 @@ async function doImport() {
     if (_for_me) { const u = userOf(card.id); if (!u.for_me && !u.for_me_set) { u.for_me = true; await saveUser(u); } }
     ids.push(card.id); if (_image_data) withImg.push([card.id, _image_data]);
   }
-  importState = { preview: null, done: ids };
+  importState = { preview: null, done: ids, gs: ids.length ? { state: 'busy' } : null };
   let failed = 0;
   if (withImg.length && !hasCloud()) failed = withImg.length;
   else for (const [i, [id, data]] of withImg.entries()) {
     toast(`上傳原圖 ${i + 1} / ${withImg.length}…`);
     try { const raw = await (await fetch(data)).blob(); const blob = await compressImage(raw); await uploadBlob(id, blob); } catch (e) { failed++; }
   }
-  toast(failed ? `已匯入 ${ids.length} 張卡；${failed} 張原圖未上傳${hasCloud() ? '，請按「上傳原圖」重試' : '，請先到「設定」填寫 Cloudinary'}` : `已匯入 ${ids.length} 張卡${withImg.length ? '，原圖已上傳' : ''}`);
-  render(false);
+  const imgMsg = failed ? `；${failed} 張原圖未上傳${hasCloud() ? '，請按「上傳原圖」重試' : '，請先到「設定」填寫 Cloudinary'}` : withImg.length ? '，原圖已上傳' : '';
+  if (ids.length) { toast(`已匯入 ${ids.length} 張卡${imgMsg}，正在備份到雲端…`); render(false); }
+  const g = ids.length ? await gsBackupNow() : null;
+  importState.gs = g;
+  const gsMsg = !g ? '' : g.state === 'ok' ? '，已備份到雲端' : g.state === 'off' ? '；尚未開啟雲端備份' : g.state === 'offline' ? '；目前離線，有網路時會自動補傳' : `；雲端備份失敗：${g.error}`;
+  toast(`已匯入 ${ids.length} 張卡${imgMsg}${gsMsg}`);
+  render(!!ids.length);
 }
 
 /* ---------- settings ---------- */
@@ -1406,6 +1416,9 @@ async function renderSettings() {
       <div class="btn-row"><button class="btn solid" data-act="backup">備份（可選雲端硬碟）</button><button class="btn danger" data-act="restore">從備份還原</button></div>
       <p style="font-size:14px">按下後會跳出分享選單，選「雲端硬碟」即可存到 Google 雲端硬碟。還原時在檔案選單左上角「≡」選雲端硬碟，就能挑選備份檔。</p>
       <button class="linkbtn" data-act="backupdl">改為下載到手機</button></div>
+    <div class="panel"><h3>卡片清單（給 Claude）</h3>
+      <p>複製所有卡片的 id、標題、分類，貼給 Claude 做新卡時就能填「關聯卡片」。不含圖片與個人紀錄。</p>
+      <div class="btn-row"><button class="btn solid" data-act="copylist">複製卡片清單</button></div></div>
     <div class="panel"><h3>字級</h3><div class="chips" style="padding:0">${[['1', '標準'], ['1.12', '大'], ['1.25', '特大']].map(([v, l]) => `<button class="chip${String(fontScale()) === v ? ' on' : ''}" data-act="fontscale" data-val="${v}">${l}</button>`).join('')}</div></div>
     <div class="panel"><h3>關於</h3>
       <div class="kv"><span>卡片數</span><b>${activeIds().length} 張${CARDS.size > activeIds().length ? `（另有封存 ${CARDS.size - activeIds().length} 張）` : ''}</b></div>
@@ -1417,6 +1430,27 @@ function backupFile() {
   const data = { schema_version: SCHEMA_VERSION, exported_at: new Date().toISOString(), app_version: APP_VERSION, cards, teach: { learned: TEACH.learned, logs: TEACH.logs } };
   const name = `wisdom-kb-backup-${today().replaceAll('-', '')}`;
   return { text: JSON.stringify(data, null, 1), name };
+}
+function cardListText() {
+  const rows = [...CARDS.values()].sort((a, b) => String(userOf(a.id).created_at || '').localeCompare(String(userOf(b.id).created_at || '')));
+  const arch = rows.filter(c => userOf(c.id).archived).length;
+  const lines = rows.map(c => {
+    const u = userOf(c.id), marks = [];
+    if (u.for_me) marks.push('給我的建議');
+    if (u.archived) marks.push('封存');
+    if (!(c.teaching && Object.keys(c.teaching).some(k => hasTeach(c, k)))) marks.push('無教學範例');
+    return `${c.id}｜${String(c.title || '').replace(/[｜|]/g, '／')}｜${c.category}${marks.length ? '｜' + marks.join('、') : ''}`;
+  });
+  return `為人處世知識庫 卡片清單（${today()}，APP v${APP_VERSION}）\n共 ${rows.length} 張${arch ? `（含封存 ${arch} 張）` : ''}\n格式：id｜標題｜分類｜標記\n\n${lines.join('\n')}`;
+}
+async function doCopyList() {
+  if (!CARDS.size) { toast('目前沒有卡片'); return; }
+  const txt = cardListText();
+  try { await navigator.clipboard.writeText(txt); toast(`已複製卡片清單（${CARDS.size} 張），貼給 Claude 即可`); return; } catch (e) {}
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wisdom-kb-cardlist-${today().replaceAll('-', '')}.txt`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('無法複製，已改為下載清單檔到手機');
 }
 async function doBackup(mode) {
   const { text, name } = backupFile();
@@ -1468,7 +1502,7 @@ async function gsCall(action, extra) {
 }
 function markDirty() { if (!gsOn()) return; gsDirty(true); clearTimeout(GS.timer); GS.timer = setTimeout(() => gsBackup(false), 30000); }
 async function gsBackup(force, manual) {
-  if (!gsOn() || GS.busy) return;
+  if (!gsOn() || GS.busy) return null;
   GS.busy = true; clearTimeout(GS.timer);
   let status;
   try {
@@ -1482,6 +1516,24 @@ async function gsBackup(force, manual) {
   const prev = await getMeta('gs_status'); await setMeta('gs_status', status);
   if (manual) toast(status.ok ? `已備份到 Google Sheets（${status.count} 張）` : status.error);
   if (route && (route.name === 'settings' || (route.name === 'home' && (!status.ok || (prev && !prev.ok))))) render(true);
+  return status;
+}
+/* 匯入後立即備份到 Google Sheets（v1.10.1） */
+async function gsBackupNow() {
+  if (!gsOn()) return { state: 'off' };
+  for (let i = 0; GS.busy && i < 60; i++) await new Promise(r => setTimeout(r, 500));
+  if (!navigator.onLine) { gsDirty(true); return { state: 'offline' }; }
+  const st = await gsBackup(false, false);
+  if (!st) return { state: 'fail', error: '備份忙碌中，請按「重試」' };
+  return st.ok ? { state: 'ok' } : { state: 'fail', error: st.error };
+}
+function gsImportLine(g) {
+  if (!g) return '';
+  if (g.state === 'busy') return '<div class="gsline">雲端備份：備份中…</div>';
+  if (g.state === 'ok') return '<div class="gsline ok">雲端備份：✓ 已完成</div>';
+  if (g.state === 'off') return '<div class="gsline bad">尚未開啟雲端備份，換手機時這些卡會遺失。<a href="#/settings">到設定開啟</a></div>';
+  if (g.state === 'offline') return '<div class="gsline bad">目前離線，有網路時會自動補傳到雲端 <button class="copy" data-act="gsimport">重試</button></div>';
+  return `<div class="gsline bad">雲端備份：✗ 失敗（${esc(g.error || '未知原因')}） <button class="copy" data-act="gsimport">重試</button></div>`;
 }
 function applyBackupData(data) {
   return idb(['cards', 'user'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('user').clear();
@@ -1650,6 +1702,8 @@ document.addEventListener('click', async e => {
     case 'savecloud': localStorage.setItem('cloudinary_name', $('#cName').value.trim()); localStorage.setItem('cloudinary_preset', $('#cPreset').value.trim()); toast('已儲存設定'); break;
     case 'backup': await doBackup(); break;
     case 'backupdl': await doBackup('download'); break;
+    case 'copylist': await doCopyList(); break;
+    case 'gsimport': { importState.gs = { state: 'busy' }; render(true); const g = await gsBackupNow(); importState.gs = g; toast(g.state === 'ok' ? '已備份到雲端' : g.state === 'offline' ? '目前離線，有網路時會自動補傳' : g.state === 'off' ? '尚未開啟雲端備份' : `雲端備份失敗：${g.error}`); render(true); break; }
     case 'restore': doRestore(); break;
   }
 });
