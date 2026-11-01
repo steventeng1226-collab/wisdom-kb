@@ -86,13 +86,15 @@ mark{background:#FAD776;color:inherit;padding:0 1px;border-radius:2px}
 .banner{margin:14px 16px 0;background:#FFF1C9;border:1.5px solid var(--hit-line);border-radius:10px;padding:10px 14px;font-size:16px;color:var(--hit-ink)}
 .core{margin:14px 16px 0;font-size:17px;line-height:1.65}
 .core b{color:var(--accent)}
-.jump{position:sticky;top:0;z-index:4;background:var(--bg);padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;border-bottom:1px solid #E6E0D4}
+.jump{position:relative;z-index:4;background:var(--bg);padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;border-bottom:1px solid #E6E0D4}
 .jump button{height:44px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px;font-weight:500;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jump button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .jump button.cur:not(.on){border:2px solid var(--accent);color:var(--accent);font-weight:700}
 .jump.compact{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 16px}
 .jump.compact::-webkit-scrollbar{display:none}
 .jump.compact button{flex:none;min-width:66px;padding:0 10px}
+.jump.mini{position:fixed;top:0;left:0;right:0;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.jump.mini:not(.show){display:none}
 .jump-sent{height:1px;margin-top:11px}
 .sections{padding:14px 16px 0;display:flex;flex-direction:column;gap:14px}
 .sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:0}
@@ -294,7 +296,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.10.2';
+const APP_VERSION = '1.10.3';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -750,6 +752,7 @@ function renderDigestTab(c, u, r) {
   const related = relatedBox(c, u, r.q.get('links') === '1');
   return `${banner}${c.core ? `<div class="core"><b>核心　</b>${esc(c.core)}</div>` : ''}
     <div class="jump-sent" id="jumpSent"></div><div class="jump" id="jumpBar">${(c.sections||[]).map((s, i) => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>
+    ${(c.sections||[]).length ? `<div class="jump compact mini" id="jumpMini">${c.sections.map(s => `<button data-act="jump" data-id="${esc(s.id)}" class="${s.id === hitId ? 'on' : ''}">${esc(s.chip)}</button>`).join('')}</div>` : ''}
     <div class="sections">${secs}</div>${prompts}${related}
     <div class="review">${reviewBox(u)}</div>
     ${RSESS && RSESS.ids[RSESS.i] === c.id ? `<div class="rvnext"><button class="btn" data-act="rvquit">結束複習</button><button class="btn solid" data-act="rvnext">${RSESS.i + 1 >= RSESS.ids.length ? '完成今日複習' : `下一張（${RSESS.i + 2}／${RSESS.ids.length}）›`}</button></div>` : ''}
@@ -790,36 +793,36 @@ function fitImage() {
   box.style.height = Math.max(240, (window.innerHeight - top - player - 76) / fontScale()) + 'px';
 }
 window.addEventListener('resize', fitImage);
-function jumpBarH() { const b = $('#jumpBar'); return b ? b.getBoundingClientRect().height : 0; }
+/* 段落跳轉列（v1.10.3）：上方多排列跟著頁面捲動，捲過後顯示固定在頂端的單排列；不改變頁面高度，避免捲動時跳動 */
+function miniShow(on) { const m = $('#jumpMini'); if (!m) return; if (m.classList.contains('show') !== on) { m.classList.toggle('show', on); if (on && jumpLastCur) scrollMiniTo(jumpLastCur, false); } }
+function jumpBarH() { const m = $('#jumpMini'); if (!m) return 0; const was = m.classList.contains('show'); if (!was) m.classList.add('show'); const h = m.getBoundingClientRect().height; if (!was) m.classList.remove('show'); return h; }
 function jumpTo(secId, smooth) {
-  const el = document.getElementById('sec-' + secId), bar = $('#jumpBar'), sent = $('#jumpSent'); if (!el) return;
-  if (bar && sent) { bar.classList.add('compact'); jumpCompact = true; }
+  const el = document.getElementById('sec-' + secId); if (!el) return;
   const y = el.getBoundingClientRect().top + window.scrollY - jumpBarH() - 10;
   window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'auto' });
   markCurrent(secId);
 }
-function markCurrent(secId) {
-  const bar = $('#jumpBar'); if (!bar) return;
-  let cur = null;
-  bar.querySelectorAll('button').forEach(b => { const on = b.dataset.id === secId; b.classList.toggle('cur', on); if (on) cur = b; });
-  if (cur && bar.classList.contains('compact')) bar.scrollTo({ left: Math.max(0, cur.offsetLeft - 16), behavior: 'smooth' });
+function scrollMiniTo(secId, smooth) {
+  const m = $('#jumpMini'); if (!m) return; const b = [...m.querySelectorAll('button')].find(x => x.dataset.id === secId);
+  if (b) m.scrollTo({ left: Math.max(0, b.offsetLeft - 16), behavior: smooth ? 'smooth' : 'auto' });
 }
-let jumpCompact = false, jumpTick = false, jumpLastCur = null;
+function markCurrent(secId) {
+  jumpLastCur = secId;
+  document.querySelectorAll('#jumpBar button, #jumpMini button').forEach(b => b.classList.toggle('cur', b.dataset.id === secId));
+  scrollMiniTo(secId, true);
+}
+let jumpTick = false, jumpLastCur = null;
 function onJumpScroll() {
   jumpTick = false;
-  const bar = $('#jumpBar'), sent = $('#jumpSent'); if (!bar || !sent) return;
-  const sentY = sent.getBoundingClientRect().top + window.scrollY, y = window.scrollY;
-  if (!jumpCompact && y > sentY + 60) {
-    const h0 = bar.getBoundingClientRect().height; bar.classList.add('compact'); jumpCompact = true;
-    const d = h0 - bar.getBoundingClientRect().height; if (d > 0) window.scrollBy(0, -d);
-  } else if (jumpCompact && y < sentY) { bar.classList.remove('compact'); jumpCompact = false; bar.scrollLeft = 0; }
-  const limit = bar.getBoundingClientRect().bottom + 24; let cur = null;
+  const bar = $('#jumpBar'), mini = $('#jumpMini'); if (!bar || !mini) return;
+  const showMini = bar.getBoundingClientRect().bottom < 0; miniShow(showMini);
+  const limit = (showMini ? mini.getBoundingClientRect().bottom : Math.max(0, bar.getBoundingClientRect().bottom)) + 24; let cur = null;
   document.querySelectorAll('.sections .sec').forEach(sec => { if (sec.getBoundingClientRect().top <= limit) cur = sec.id.slice(4); });
-  if (cur !== jumpLastCur) { jumpLastCur = cur; markCurrent(cur); }
+  if (cur !== jumpLastCur) markCurrent(cur);
 }
 window.addEventListener('scroll', () => { if (!jumpTick && route && route.name === 'card') { jumpTick = true; requestAnimationFrame(onJumpScroll); } }, { passive: true });
 function afterCardRender(y) {
-  jumpCompact = false; jumpLastCur = null;
+  jumpLastCur = null;
   fitImage();
   const sec = route.q.get('sec');
   if (y !== null) { window.scrollTo(0, y); onJumpScroll(); return; }
