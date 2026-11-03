@@ -296,7 +296,7 @@ details summary{min-height:44px;display:flex;align-items:center;font-size:16px;c
 
 <script>
 'use strict';
-const APP_VERSION = '1.10.3';
+const APP_VERSION = '1.10.4';
 const SCHEMA_VERSION = '1.0';
 const CATEGORIES = ['思考方法','學習成長','領導管理','人際溝通','做人處世','人生觀','財經投資'];
 const NATURES = ['原文','意譯','訪談整理','個人整理','待查證'];
@@ -1392,14 +1392,14 @@ async function doImport() {
 /* ---------- settings ---------- */
 async function gsPanel() {
   const c = gsCfg(), st = (await getMeta('gs_status')) || {};
-  const state = !gsOn() ? '<b style="color:var(--danger)">未開啟</b>' : st.ok === false ? `<b style="color:var(--danger)">失敗</b>` : st.at ? '<b style="color:var(--accent)">正常</b>' : '<b>尚未備份</b>';
+  const state = !gsOn() ? '<b style="color:var(--danger)">未開啟</b>' : st.ok === false ? (gsQuietFail(st) ? '<b style="color:var(--warn,#9A6700)">連線中斷，自動重試中</b>' : `<b style="color:var(--danger)">失敗</b>`) : st.at ? '<b style="color:var(--accent)">正常</b>' : '<b>尚未備份</b>';
   return `<div class="panel"><h3>Google Sheets 自動備份</h3>
       <p>資料有變動約 30 秒後自動備份；關閉 APP 時也會補傳。手機資料被清掉時，可以一鍵從 Google Sheets 還原。</p>
       <div class="field"><label for="gsUrl">Apps Script 網頁應用程式網址</label><input id="gsUrl" value="${esc(c.url)}" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="field"><label for="gsSecret">密碼（與 Apps Script 程式裡的 SECRET 相同）</label><input id="gsSecret" value="${esc(c.secret)}" autocomplete="off"></div>
       <div class="btn-row"><button class="btn solid" data-act="gstest">儲存並測試連線</button></div>
       <div class="kv"><span>狀態</span>${state}</div>
-      <div class="kv"><span>上次自動備份</span><b>${st.ok && st.at ? gsAgo(st.at) : '—'}</b></div>
+      <div class="kv"><span>上次備份成功</span><b>${st.ok && st.at ? gsAgo(st.at) : st.last_ok_at ? gsAgo(st.last_ok_at) : '—'}</b></div>
       ${st.error ? `<p style="color:var(--danger);font-size:15px">${esc(st.error)}</p>` : ''}
       <div class="kv"><span>雲端卡片數</span><b>${st.remote != null ? st.remote + ' 張' : '—'}</b></div>
       <div class="kv"><span>Sheets 程式版本</span><b>${st.version ? 'v' + esc(st.version) : '—'}</b></div>
@@ -1488,7 +1488,7 @@ function doRestore() {
 }
 
 /* ---------- Google Sheets 自動備份 ---------- */
-const GS = { timer: null, busy: false };
+const GS = { timer: null, retry: null, busy: false };
 function gsCfg() { try { return { url: (localStorage.getItem('gs_url') || '').trim(), secret: (localStorage.getItem('gs_secret') || '').trim() }; } catch (e) { return { url: '', secret: '' }; } }
 function gsOn() { const c = gsCfg(); return !!(c.url && c.secret); }
 function gsDirty(v) { try { if (v) localStorage.setItem('gs_dirty', '1'); else localStorage.removeItem('gs_dirty'); } catch (e) {} }
@@ -1499,7 +1499,7 @@ async function gsCall(action, extra) {
   if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(c.url)) throw new Error('網址格式不對，應以 https://script.google.com/ 開頭');
   let r;
   try { r = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ secret: c.secret, action, ...(extra || {}) }) }); }
-  catch (e) { throw new Error(navigator.onLine ? '連不到 Apps Script，請確認部署的存取權為「所有人」' : '目前離線，有網路時會自動補傳'); }
+  catch (e) { throw Object.assign(new Error(navigator.onLine ? '連線中斷，稍後自動重試' : '目前離線，有網路時會自動補傳'), { net: true }); }
   const t = await r.text(); let j;
   try { j = JSON.parse(t); } catch (e) { throw new Error('回應格式不對，請確認貼的是「網頁應用程式」網址，且存取權為「所有人」'); }
   if (!j.ok && j.error !== 'shrink') throw new Error(GS_ERR[j.error] || String(j.error || '未知錯誤'));
@@ -1508,17 +1508,24 @@ async function gsCall(action, extra) {
 function markDirty() { if (!gsOn()) return; gsDirty(true); clearTimeout(GS.timer); GS.timer = setTimeout(() => gsBackup(false), 30000); }
 async function gsBackup(force, manual) {
   if (!gsOn() || GS.busy) return null;
-  GS.busy = true; clearTimeout(GS.timer);
+  GS.busy = true; clearTimeout(GS.timer); clearTimeout(GS.retry);
+  const prev = await getMeta('gs_status');
+  const lastOk = prev ? (prev.ok ? prev.at : prev.last_ok_at) || null : null;
   let status;
   try {
     const cards = [...CARDS.values()].map(c => ({ ...c, user: userOf(c.id) }));
     if (!cards.length && !force) throw new Error('手機上沒有卡片，已暫停自動備份，避免蓋掉雲端資料');
     const j = await gsCall('backup', { force: !!force, payload: { schema_version: SCHEMA_VERSION, app_version: APP_VERSION, exported_at: new Date().toISOString(), cards, teach: { learned: TEACH.learned, logs: TEACH.logs } } });
-    if (!j.ok) { status = { ok: false, at: new Date().toISOString(), shrink: { remote: j.remote_count, local: j.local_count }, error: `雲端有 ${j.remote_count} 張卡，手機只有 ${j.local_count} 張，已暫停覆蓋雲端` }; }
+    if (!j.ok) { status = { ok: false, at: new Date().toISOString(), last_ok_at: lastOk, shrink: { remote: j.remote_count, local: j.local_count }, error: `雲端有 ${j.remote_count} 張卡，手機只有 ${j.local_count} 張，已暫停覆蓋雲端` }; }
     else { gsDirty(false); status = { ok: true, at: new Date().toISOString(), count: cards.length, version: j.version, remote: cards.length }; await setMeta('last_backup_at', today()); }
-  } catch (e) { status = { ok: false, at: new Date().toISOString(), error: e.message }; }
+  } catch (e) {
+    const fails = (prev && !prev.ok && prev.net ? prev.fails || 1 : 0) + (e.net ? 1 : 0);
+    status = { ok: false, at: new Date().toISOString(), last_ok_at: lastOk, error: e.message, net: !!e.net, fails: e.net ? fails : 0 };
+    if (e.net && fails >= 3 && navigator.onLine) status.error = `已連續 ${fails} 次連不上 Apps Script。網路正常仍失敗時，請確認部署的存取權為「所有人」`;
+  }
   finally { GS.busy = false; }
-  const prev = await getMeta('gs_status'); await setMeta('gs_status', status);
+  await setMeta('gs_status', status);
+  if (!status.ok && status.net && navigator.onLine && status.fails <= 5) GS.retry = setTimeout(() => { if (gsIsDirty()) gsBackup(false); }, status.fails <= 1 ? 60000 : 300000);
   if (manual) toast(status.ok ? `已備份到 Google Sheets（${status.count} 張）` : status.error);
   if (route && (route.name === 'settings' || (route.name === 'home' && (!status.ok || (prev && !prev.ok))))) render(true);
   return status;
@@ -1578,15 +1585,17 @@ function gsAgo(iso) {
   const m = Math.round((Date.now() - new Date(iso)) / 60000);
   return m < 1 ? '剛剛' : m < 60 ? `${m} 分鐘前` : m < 1440 ? `${Math.round(m / 60)} 小時前` : `${Math.round(m / 1440)} 天前`;
 }
+/* 偶發的連線中斷（連續 2 次以內、且 1 天內曾備份成功）不在首頁顯示紅框，背景自動重試（v1.10.4） */
+function gsQuietFail(st) { return !!(st.net && (st.fails || 1) < 3 && st.last_ok_at && Date.now() - new Date(st.last_ok_at) < 86400000); }
 async function gsBanner() {
   if (!gsOn()) return '';
   const st = await getMeta('gs_status');
   if (st && st.shrink) return `<div class="banner warnb"><div>${esc(st.error)}。</div><div class="btn-row" style="margin-top:8px"><button class="copy" data-act="gsrestore">從雲端還原</button><button class="copy" data-act="gsforce">以手機為準覆蓋雲端</button></div></div>`;
-  if (st && !st.ok) return `<div class="banner warnb" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>自動備份失敗：${esc(st.error)}</span><button class="copy" data-act="gsnow">重試</button></div>`;
+  if (st && !st.ok && !gsQuietFail(st)) return `<div class="banner warnb" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>自動備份失敗：${esc(st.error)}</span><button class="copy" data-act="gsnow">重試</button></div>`;
   return '';
 }
 window.addEventListener('online', () => { if (gsIsDirty()) gsBackup(false); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && gsIsDirty()) gsBackup(false); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && gsIsDirty()) gsBackup(false); else if (document.visibilityState === 'visible' && gsIsDirty()) { clearTimeout(GS.retry); GS.retry = setTimeout(() => { if (gsIsDirty()) gsBackup(false); }, 3000); } });
 
 /* ---------- actions ---------- */
 document.addEventListener('click', async e => {
